@@ -298,6 +298,27 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
     }
 });
 
+JavaScript
+const allowedOrigins = [
+  'http://localhost:3000',           // Local dev
+  'https://www.catchup.page',        // YOUR CUSTOM DOMAIN
+  'https://catchup.page'             // Apex domain (recommended)
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
 // --- START SERVER ---
 const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`\n🚀 SERVER STARTED ON PORT ${PORT}`);
