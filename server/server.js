@@ -15,6 +15,7 @@ const allowedOrigins = [
   'http://localhost:3000',           
   'https://www.catchup.page',        
   'https://catchup.page',            
+  'https://backend.catchup.page'
   'https://catchup-frontend.vercel.app' 
 ];
 
