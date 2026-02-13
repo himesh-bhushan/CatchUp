@@ -30,5 +30,4 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
-.env
 server/.env
