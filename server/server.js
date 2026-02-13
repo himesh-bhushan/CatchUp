@@ -9,23 +9,18 @@ import { createClient } from '@supabase/supabase-js';
 
 // --- 1. SETUP ---
 const app = express();
-// ✅ CRITICAL: Render sets the PORT dynamically. Using 5050 as a local fallback.
 const PORT = process.env.PORT || 5050; 
 
-// ✅ SECURE CORS HANDSHAKE
-// This whitelist ensures only your official site can talk to your database.
 const allowedOrigins = [
-  'http://localhost:3000',           // Local development
-  'https://www.catchup.page',        // YOUR CUSTOM DOMAIN
-  'https://catchup.page',            // Apex domain
-  'https://catchup-frontend.vercel.app' // Vercel default (optional backup)
+  'http://localhost:3000',           
+  'https://www.catchup.page',        
+  'https://catchup.page',            
+  'https://catchup-frontend.vercel.app' 
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
-    
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -52,6 +47,93 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // ✅ HEALTH CHECK
 app.get('/', (req, res) => {
     res.send("✅ CatchUp Backend is ALIVE and SECURED for www.catchup.page");
+});
+
+/* =========================================
+   👤 PART G: GOOGLE HEALTH HANDSHAKE (NEW)
+========================================= */
+
+// 1. OAuth2 Callback: Receives the code from Google and saves the Refresh Token
+app.get('/api/auth/google/callback', async (req, res) => {
+    const { code, state } = req.query; // 'state' should be the Supabase userID
+
+    try {
+        // Swap code for tokens
+        const response = await axios.post('https://oauth2.googleapis.com/token', {
+            code,
+            client_id: process.env.GOOGLE_CLIENT_ID,
+            client_secret: process.env.GOOGLE_CLIENT_SECRET,
+            redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+            grant_type: 'authorization_code',
+        });
+
+        const { refresh_token } = response.data;
+
+        // Save refresh token to Supabase
+        // Note: Google only sends refresh_token on the first consent
+        if (refresh_token) {
+            await supabase
+                .from('profiles')
+                .update({ 
+                    google_refresh_token: refresh_token,
+                    google_connected: true 
+                })
+                .eq('id', state);
+        }
+
+        res.redirect('https://www.catchup.page/dashboard?sync=success');
+    } catch (error) {
+        console.error("Google Auth Error:", error.response?.data || error.message);
+        res.redirect('https://www.catchup.page/dashboard?sync=error');
+    }
+});
+
+// 2. Data Sync: Uses the saved Refresh Token to pull new steps
+app.post('/api/wearables/google-sync/:uid', async (req, res) => {
+    try {
+        const { uid } = req.params;
+
+        // Get refresh token from Supabase
+        const { data: user } = await supabase
+            .from('profiles')
+            .select('google_refresh_token')
+            .eq('id', uid)
+            .single();
+
+        if (!user?.google_refresh_token) return res.status(400).json({ error: "Google not connected" });
+
+        // Get new Access Token using the Refresh Token
+        const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+            refresh_token: user.google_refresh_token,
+            client_id: process.env.GOOGLE_CLIENT_ID,
+            client_secret: process.env.GOOGLE_CLIENT_SECRET,
+            grant_type: 'refresh_token',
+        });
+
+        const accessToken = tokenResponse.data.access_token;
+
+        // Fetch steps from Google Fit API
+        const fitResponse = await axios.post(
+            'https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate',
+            {
+                aggregateBy: [{ dataSourceId: "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps" }],
+                bucketByTime: { durationMillis: 86400000 }, 
+                startTimeMillis: Date.now() - 86400000,
+                endTimeMillis: Date.now()
+            },
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+
+        const steps = fitResponse.data.bucket[0]?.dataset[0]?.point[0]?.value[0]?.intVal || 0;
+
+        // Update Supabase with real data
+        await supabase.from('profiles').update({ steps }).eq('id', uid);
+
+        res.json({ success: true, steps });
+    } catch (error) {
+        console.error("Google Sync Error:", error.message);
+        res.status(500).json({ error: "Sync failed" });
+    }
 });
 
 /* =========================================
@@ -212,7 +294,6 @@ app.get('/api/wearables/stats/:uid', async (req, res) => {
                 sleep: data.sleep_seconds || 28800
             });
         } else {
-            // Mock data if no entry exists yet
             res.json({ steps: 7500, calories: 450, distance: 5.2, sleep: 27000, heart_rate: 72 });
         }
     } catch (err) {
