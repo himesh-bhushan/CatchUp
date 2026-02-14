@@ -327,6 +327,36 @@ app.post('/api/wearables/google-sync/:uid', async (req, res) => {
     }
 });
 
+
+/* =========================================
+   ⌚ APPLE SHORTCUTS SYNC
+========================================= */
+app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
+    try {
+        const { uid } = req.params;
+        const { steps, calories } = req.body;
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        // 1. Calculate distance based on steps if not provided
+        const distance = parseFloat((steps * 0.0008).toFixed(2));
+
+        // 2. Update Supabase
+        await supabase.from('profiles').update({ steps }).eq('id', uid);
+        
+        await supabase.from('activity_logs').upsert({
+            user_id: uid,
+            date: todayStr,
+            steps: steps,
+            calories: calories || Math.round(steps * 0.04),
+            distance: distance
+        }, { onConflict: 'user_id,date' });
+
+        res.json({ success: true, message: "iPhone data synced!" });
+    } catch (error) {
+        res.status(500).json({ error: "Manual sync failed" });
+    }
+});
+
 // --- 3. START SERVER ---
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 CatchUp Server running on port ${PORT}`);
