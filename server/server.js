@@ -337,31 +337,27 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         const { steps, calories } = req.body; 
         const todayStr = new Date().toISOString().split('T')[0];
 
-        const distance = parseFloat((steps * 0.0008).toFixed(2));
+        // ✅ FIX: Use Math.round() to turn decimals into whole integers
+        const roundedSteps = Math.round(steps || 0);
+        const roundedCalories = Math.round(calories || (roundedSteps * 0.04));
+        const distance = parseFloat((roundedSteps * 0.0008).toFixed(2));
 
         // 1. Update profiles table
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .update({ steps })
-            .eq('id', uid);
+        await supabase.from('profiles').update({ steps: roundedSteps }).eq('id', uid);
         
-        if (profileError) throw profileError;
-
         // 2. Upsert into activity_logs table
-        const { error: activityError } = await supabase.from('activity_logs').upsert({
+        const { error } = await supabase.from('activity_logs').upsert({
             user_id: uid,
             date: todayStr,
-            steps: steps,
-            calories: calories || Math.round(steps * 0.04),
+            steps: roundedSteps,
+            calories: roundedCalories,
             distance: distance
         }, { onConflict: 'user_id,date' });
 
-        if (activityError) throw activityError;
-
+        if (error) throw error;
         res.json({ success: true, message: "iPhone data received!" });
     } catch (error) {
         console.error("Manual Sync Error:", error.message);
-        // This sends the specific Supabase error to your iPhone screen
         res.status(500).json({ error: error.message }); 
     }
 });
