@@ -333,7 +333,6 @@ app.post('/api/wearables/google-sync/:uid', async (req, res) => {
 ========================================= */
 app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
     try {
-        // ✅ CLEAN UID: Forcefully remove hidden characters or spaces
         const cleanUid = req.params.uid.trim(); 
         const { steps, calories } = req.body; 
         const todayStr = new Date().toISOString().split('T')[0]; 
@@ -343,25 +342,20 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         const roundedCalories = Math.round(calories || (roundedSteps * 0.04));
         const distance = parseFloat((roundedSteps * 0.0008).toFixed(2));
 
-        console.log(`📡 FORCED SYNC for UID: "${cleanUid}"`);
+        console.log(`📡 Final Sync Attempt for: ${cleanUid}`);
 
-        // 🟢 STEP 1: UPSERT Profile (Creates it if missing, updates if exists)
-        // This stops the "User Not Found" 404 error permanently.
-        const { data: profileData, error: profileError } = await supabase
+        // 🟢 STEP 1: Update the timestamp in Profiles
+        const { error: profileError } = await supabase
             .from('profiles')
-            .upsert({ 
-                id: cleanUid,
-                steps: roundedSteps,
-                last_synced_at: now 
-            }, { onConflict: 'id' })
-            .select();
+            .update({ last_synced_at: now, steps: roundedSteps })
+            .eq('id', cleanUid);
 
         if (profileError) {
-            console.error("❌ Profile Upsert Error:", profileError.message);
-            throw profileError;
+            console.error("❌ RLS Blocked Profile Update:", profileError.message);
+            return res.status(403).json({ error: profileError.message });
         }
 
-        // 🟢 STEP 2: Upsert activity_logs
+        // 🟢 STEP 2: Update the Activity Log
         const { error: logError } = await supabase.from('activity_logs').upsert({
             user_id: cleanUid,
             date: todayStr,
@@ -370,16 +364,11 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
             distance: distance
         }, { onConflict: 'user_id,date' });
 
-        if (logError) {
-            console.error("❌ Activity Log Error:", logError.message);
-            throw logError;
-        }
+        if (logError) throw logError;
 
-        console.log(`✅ SUCCESS: Dashboard forced update for ${cleanUid}`);
-        res.json({ success: true, message: "Sync forced successfully!" });
+        res.json({ success: true, message: "Sync successful! Check your dashboard." });
 
     } catch (error) {
-        console.error("Forced Sync Error:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
