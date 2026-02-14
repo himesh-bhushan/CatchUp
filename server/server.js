@@ -342,29 +342,32 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         const roundedCalories = Math.round(calories || (roundedSteps * 0.04));
         const distance = parseFloat((roundedSteps * 0.0008).toFixed(2));
 
-        console.log(`📡 Sync Request for UID: [${uid}]`); // Debug: Check for extra spaces
+        // ✅ Clean the UID to prevent "NULL" updates caused by hidden spaces
+        const cleanUid = uid.trim(); 
+        console.log(`📡 Attempting sync for UID: "${cleanUid}"`);
 
-        // 1. Update profiles table and check if it actually changed a row
-        const { data, error: profileError, count } = await supabase
+        // 1. Update profiles table and capture result
+        const { data, error: profileError } = await supabase
             .from('profiles')
             .update({ 
                 steps: roundedSteps,
                 last_synced_at: now 
             })
-            .eq('id', uid.trim()) // .trim() handles accidental spaces in the URL
-            .select();
+            .eq('id', cleanUid)
+            .select(); // Returns the updated row to verify it worked
 
         if (profileError) throw profileError;
         
+        // Log verification for your Render console
         if (!data || data.length === 0) {
-            console.warn(`⚠️ Warning: No profile found for UID ${uid}. Timestamp not saved.`);
+            console.error(`❌ DB Error: No user found with ID "${cleanUid}". Check Supabase.`);
         } else {
-            console.log(`✅ Success: Timestamp saved for ${uid}`);
+            console.log(`✅ Success: Timestamp ${now} saved for ${data[0].first_name}`);
         }
         
-        // 2. Upsert today's entry in activity_logs
+        // 2. Upsert activity_logs
         const { error: logError } = await supabase.from('activity_logs').upsert({
-            user_id: uid.trim(),
+            user_id: cleanUid,
             date: todayStr,
             steps: roundedSteps,
             calories: roundedCalories,
