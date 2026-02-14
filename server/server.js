@@ -329,40 +329,41 @@ app.post('/api/wearables/google-sync/:uid', async (req, res) => {
 
 
 /* =========================================
-   ⌚ APPLE SHORTCUTS SYNC (RECEIVER)
+   ⌚ APPLE SHORTCUTS SYNC (RECEIVER) - FIXED
 ========================================= */
 app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
     try {
         const { uid } = req.params;
-        const { steps, calories } = req.body; // Data from your iPhone
+        const { steps, calories } = req.body; 
         const todayStr = new Date().toISOString().split('T')[0];
 
-        // Calculate distance automatically
         const distance = parseFloat((steps * 0.0008).toFixed(2));
 
-        // 1. Update the user's main profile
-        await supabase.from('profiles').update({ steps }).eq('id', uid);
+        // 1. Update profiles table
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .update({ steps })
+            .eq('id', uid);
         
-        // 2. Insert or Update today's entry in activity_logs
-        const { error } = await supabase.from('activity_logs').upsert({
+        if (profileError) throw profileError;
+
+        // 2. Upsert into activity_logs table
+        const { error: activityError } = await supabase.from('activity_logs').upsert({
             user_id: uid,
             date: todayStr,
             steps: steps,
-            calories: calories || Math.round(steps * 0.04), // Fallback math
+            calories: calories || Math.round(steps * 0.04),
             distance: distance
         }, { onConflict: 'user_id,date' });
 
-        if (error) throw error;
+        if (activityError) throw activityError;
+
         res.json({ success: true, message: "iPhone data received!" });
     } catch (error) {
         console.error("Manual Sync Error:", error.message);
-        res.status(500).json({ error: "Sync failed" });
-    
-    } catch (error) {
-    console.error("Manual Sync Error:", error.message);
-    // Change this line to see the REAL error on your iPhone
-    res.status(500).json({ error: error.message }); 
-}
+        // This sends the specific Supabase error to your iPhone screen
+        res.status(500).json({ error: error.message }); 
+    }
 });
 
 // --- 3. START SERVER ---
