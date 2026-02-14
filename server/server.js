@@ -357,7 +357,12 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
     } catch (error) {
         console.error("Manual Sync Error:", error.message);
         res.status(500).json({ error: "Sync failed" });
-    }
+    
+    } catch (error) {
+    console.error("Manual Sync Error:", error.message);
+    // Change this line to see the REAL error on your iPhone
+    res.status(500).json({ error: error.message }); 
+}
 });
 
 // --- 3. START SERVER ---
