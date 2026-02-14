@@ -333,7 +333,6 @@ app.post('/api/wearables/google-sync/:uid', async (req, res) => {
 ========================================= */
 app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
     try {
-        // ✅ CLEAN UID: Removes any potential hidden spaces from the iPhone URL
         const cleanUid = req.params.uid.trim(); 
         const { steps, calories } = req.body; 
         const todayStr = new Date().toISOString().split('T')[0]; 
@@ -343,30 +342,20 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         const roundedCalories = Math.round(calories || (roundedSteps * 0.04));
         const distance = parseFloat((roundedSteps * 0.0008).toFixed(2));
 
-        console.log(`📡 Sync Request for UID: "${cleanUid}"`);
-
-        // 🟢 STEP 1: Update the Profile and CHECK if the row exists
-        const { data: updatedProfile, error: profileError } = await supabase
+        // 🟢 STEP 1: Use UPSERT instead of UPDATE
+        // This creates the profile row if it's missing, fixing the "Not Found" error
+        const { data: profileData, error: profileError } = await supabase
             .from('profiles')
-            .update({ 
+            .upsert({ 
+                id: cleanUid,
                 steps: roundedSteps,
                 last_synced_at: now 
-            })
-            .eq('id', cleanUid)
+            }, { onConflict: 'id' })
             .select();
 
         if (profileError) throw profileError;
 
-        // 🔴 CRITICAL: If the database returns 0 rows, the ID is wrong
-        if (!updatedProfile || updatedProfile.length === 0) {
-            console.error(`❌ SYNC FAILED: User ID ${cleanUid} was not found in the profiles table.`);
-            return res.status(404).json({ 
-                success: false, 
-                message: `User ID not found. Ensure ID ${cleanUid} matches Supabase exactly.` 
-            });
-        }
-
-        // 🟢 STEP 2: Only save the activity log if the profile was successfully found
+        // 🟢 STEP 2: Update activity logs as usual
         const { error: logError } = await supabase.from('activity_logs').upsert({
             user_id: cleanUid,
             date: todayStr,
@@ -377,15 +366,12 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
 
         if (logError) throw logError;
 
-        console.log(`✅ SUCCESS: Timestamp saved for ${updatedProfile[0].first_name}`);
-        res.json({ success: true, message: "Sync complete!" });
-
+        res.json({ success: true, message: "Profile synced and timestamped!" });
     } catch (error) {
         console.error("Manual Sync Error:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
-
 // --- 3. START SERVER ---
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 CatchUp Server running on port ${PORT}`);
