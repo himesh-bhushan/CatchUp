@@ -333,6 +333,7 @@ app.post('/api/wearables/google-sync/:uid', async (req, res) => {
 ========================================= */
 app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
     try {
+        // ✅ CLEAN UID: Forcefully remove hidden characters or spaces
         const cleanUid = req.params.uid.trim(); 
         const { steps, calories } = req.body; 
         const todayStr = new Date().toISOString().split('T')[0]; 
@@ -342,8 +343,10 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         const roundedCalories = Math.round(calories || (roundedSteps * 0.04));
         const distance = parseFloat((roundedSteps * 0.0008).toFixed(2));
 
-        // 🟢 STEP 1: Use UPSERT instead of UPDATE
-        // This creates the profile row if it's missing, fixing the "Not Found" error
+        console.log(`📡 FORCED SYNC for UID: "${cleanUid}"`);
+
+        // 🟢 STEP 1: UPSERT Profile (Creates it if missing, updates if exists)
+        // This stops the "User Not Found" 404 error permanently.
         const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .upsert({ 
@@ -353,9 +356,12 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
             }, { onConflict: 'id' })
             .select();
 
-        if (profileError) throw profileError;
+        if (profileError) {
+            console.error("❌ Profile Upsert Error:", profileError.message);
+            throw profileError;
+        }
 
-        // 🟢 STEP 2: Update activity logs as usual
+        // 🟢 STEP 2: Upsert activity_logs
         const { error: logError } = await supabase.from('activity_logs').upsert({
             user_id: cleanUid,
             date: todayStr,
@@ -364,11 +370,16 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
             distance: distance
         }, { onConflict: 'user_id,date' });
 
-        if (logError) throw logError;
+        if (logError) {
+            console.error("❌ Activity Log Error:", logError.message);
+            throw logError;
+        }
 
-        res.json({ success: true, message: "Profile synced and timestamped!" });
+        console.log(`✅ SUCCESS: Dashboard forced update for ${cleanUid}`);
+        res.json({ success: true, message: "Sync forced successfully!" });
+
     } catch (error) {
-        console.error("Manual Sync Error:", error.message);
+        console.error("Forced Sync Error:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
