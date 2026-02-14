@@ -15,7 +15,7 @@ const allowedOrigins = [
   'http://localhost:3000',           
   'https://www.catchup.page',        
   'https://catchup.page',            
-  'https://backend.catchup.page'
+  'https://backend.catchup.page',
   'https://catchup-frontend.vercel.app' 
 ];
 
@@ -195,7 +195,7 @@ app.post('/api/users/sync', async (req, res) => {
             .from('profiles')
             .select('id')
             .eq('id', uid)
-            .single();
+            .maybeSingle();
 
         if (!existingUser) {
             const { error } = await supabase
