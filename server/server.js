@@ -341,24 +341,41 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
 });
 
 /* =========================================
-   ⌚ PART G: GOOGLE HEALTH SYNC (PRODUCTION)
+   ⌚ PART G: GOOGLE HEALTH SYNC (FINAL)
 ========================================= */
 
-// 2. Data Sync: Uses the saved Refresh Token to pull new steps
+// 1. OAuth2 Callback
+app.get('/api/auth/google/callback', async (req, res) => {
+    const { code, state } = req.query; 
+    try {
+        const response = await axios.post('https://oauth2.googleapis.com/token', {
+            code,
+            client_id: process.env.GOOGLE_CLIENT_ID,
+            client_secret: process.env.GOOGLE_CLIENT_SECRET,
+            redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+            grant_type: 'authorization_code',
+        });
+        const { refresh_token } = response.data;
+        if (refresh_token) {
+            await supabase
+                .from('profiles')
+                .update({ google_refresh_token: refresh_token, google_connected: true })
+                .eq('id', state);
+        }
+        res.redirect('https://www.catchup.page/dashboard?sync=success');
+    } catch (error) {
+        console.error("Google Auth Error:", error.response?.data || error.message);
+        res.redirect('https://www.catchup.page/dashboard?sync=error');
+    }
+});
+
+// 2. Data Sync Triggered by Dashboard Refresh
 app.post('/api/wearables/google-sync/:uid', async (req, res) => {
     try {
         const { uid } = req.params;
-
-        // Get refresh token from Supabase
-        const { data: user } = await supabase
-            .from('profiles')
-            .select('google_refresh_token')
-            .eq('id', uid)
-            .single();
-
+        const { data: user } = await supabase.from('profiles').select('google_refresh_token').eq('id', uid).single();
         if (!user?.google_refresh_token) return res.status(400).json({ error: "Google not connected" });
 
-        // Get new Access Token using the Refresh Token
         const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
             refresh_token: user.google_refresh_token,
             client_id: process.env.GOOGLE_CLIENT_ID,
@@ -367,10 +384,7 @@ app.post('/api/wearables/google-sync/:uid', async (req, res) => {
         });
 
         const accessToken = tokenResponse.data.access_token;
-
-        // Fetch steps from Google Fit API
-        const fitResponse = await axios.post(
-            'https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate',
+        const fitResponse = await axios.post('https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate',
             {
                 aggregateBy: [{ dataSourceId: "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps" }],
                 bucketByTime: { durationMillis: 86400000 }, 
@@ -383,18 +397,23 @@ app.post('/api/wearables/google-sync/:uid', async (req, res) => {
         const steps = fitResponse.data.bucket[0]?.dataset[0]?.point[0]?.value[0]?.intVal || 0;
         const todayStr = new Date().toISOString().split('T')[0];
 
-        // ✅ Update Supabase with real data
-        // 1. Update the main profile
+        // ✅ RING MATH: This moves the Activity Ring
+        const calories = Math.round(steps * 0.04); 
+        const distance = parseFloat((steps * 0.0008).toFixed(2));
+
+        // Update Profile
         await supabase.from('profiles').update({ steps }).eq('id', uid);
         
-        // 2. Upsert into activity_logs for the chart/history
+        // Update Activity Log for today
         await supabase.from('activity_logs').upsert({
             user_id: uid,
             date: todayStr,
-            steps: steps
+            steps: steps,
+            calories: calories,
+            distance: distance
         }, { onConflict: 'user_id,date' });
 
-        res.json({ success: true, steps });
+        res.json({ success: true, steps, calories });
     } catch (error) {
         console.error("Google Sync Error:", error.message);
         res.status(500).json({ error: "Sync failed" });
