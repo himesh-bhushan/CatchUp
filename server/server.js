@@ -336,22 +336,19 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         const { uid } = req.params;
         const { steps, calories } = req.body; 
         const todayStr = new Date().toISOString().split('T')[0];
+        const now = new Date().toISOString(); // ✅ Added timestamp for DB
 
-        // ✅ FIX 1: Round numbers to whole Integers to match Supabase schema
-        // This prevents the "invalid input syntax for type integer" error
         const roundedSteps = Math.round(steps || 0);
         const roundedCalories = Math.round(calories || (roundedSteps * 0.04));
-        
-        // ✅ FIX 2: Calculate distance based on current steps
         const distance = parseFloat((roundedSteps * 0.0008).toFixed(2));
 
-        console.log(`Syncing for ${uid}: ${roundedSteps} steps, ${roundedCalories} cal`);
-
-        // 1. Update the user's main profile
-        await supabase.from('profiles').update({ steps: roundedSteps }).eq('id', uid);
+        // 1. Update the user's main profile including last_synced_at
+        await supabase.from('profiles').update({ 
+            steps: roundedSteps,
+            last_synced_at: now // ✅ Added this line
+        }).eq('id', uid);
         
         // 2. Upsert today's entry in activity_logs
-        // This will OVERWRITE the 994,196 steps with your actual 994 steps
         const { error } = await supabase.from('activity_logs').upsert({
             user_id: uid,
             date: todayStr,
@@ -364,7 +361,6 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         res.json({ success: true, message: "iPhone data received!" });
     } catch (error) {
         console.error("Manual Sync Error:", error.message);
-        // Returns real error message to your iPhone for debugging
         res.status(500).json({ error: error.message });
     }
 });
