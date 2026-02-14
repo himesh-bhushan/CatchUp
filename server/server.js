@@ -329,31 +329,34 @@ app.post('/api/wearables/google-sync/:uid', async (req, res) => {
 
 
 /* =========================================
-   ⌚ APPLE SHORTCUTS SYNC
+   ⌚ APPLE SHORTCUTS SYNC (RECEIVER)
 ========================================= */
 app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
     try {
         const { uid } = req.params;
-        const { steps, calories } = req.body;
+        const { steps, calories } = req.body; // Data from your iPhone
         const todayStr = new Date().toISOString().split('T')[0];
 
-        // 1. Calculate distance based on steps if not provided
+        // Calculate distance automatically
         const distance = parseFloat((steps * 0.0008).toFixed(2));
 
-        // 2. Update Supabase
+        // 1. Update the user's main profile
         await supabase.from('profiles').update({ steps }).eq('id', uid);
         
-        await supabase.from('activity_logs').upsert({
+        // 2. Insert or Update today's entry in activity_logs
+        const { error } = await supabase.from('activity_logs').upsert({
             user_id: uid,
             date: todayStr,
             steps: steps,
-            calories: calories || Math.round(steps * 0.04),
+            calories: calories || Math.round(steps * 0.04), // Fallback math
             distance: distance
         }, { onConflict: 'user_id,date' });
 
-        res.json({ success: true, message: "iPhone data synced!" });
+        if (error) throw error;
+        res.json({ success: true, message: "iPhone data received!" });
     } catch (error) {
-        res.status(500).json({ error: "Manual sync failed" });
+        console.error("Manual Sync Error:", error.message);
+        res.status(500).json({ error: "Sync failed" });
     }
 });
 
