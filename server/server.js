@@ -335,7 +335,6 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
     try {
         const { uid } = req.params;
         const { steps, calories } = req.body; 
-        // ✅ CORRECTED: Added [0] to extract the date string properly
         const todayStr = new Date().toISOString().split('T')[0]; 
         const now = new Date().toISOString(); 
 
@@ -343,31 +342,42 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         const roundedCalories = Math.round(calories || (roundedSteps * 0.04));
         const distance = parseFloat((roundedSteps * 0.0008).toFixed(2));
 
-        console.log(`Syncing for ${uid}: ${roundedSteps} steps, ${roundedCalories} cal`);
+        console.log(`📡 Sync Request for UID: [${uid}]`); // Debug: Check for extra spaces
 
-        // 1. Update the user's main profile including the persistent sync timestamp
-        await supabase.from('profiles').update({ 
-            steps: roundedSteps,
-            last_synced_at: now // ✅ This updates your persistent "Last Synced" label
-        }).eq('id', uid);
+        // 1. Update profiles table and check if it actually changed a row
+        const { data, error: profileError, count } = await supabase
+            .from('profiles')
+            .update({ 
+                steps: roundedSteps,
+                last_synced_at: now 
+            })
+            .eq('id', uid.trim()) // .trim() handles accidental spaces in the URL
+            .select();
+
+        if (profileError) throw profileError;
+        
+        if (!data || data.length === 0) {
+            console.warn(`⚠️ Warning: No profile found for UID ${uid}. Timestamp not saved.`);
+        } else {
+            console.log(`✅ Success: Timestamp saved for ${uid}`);
+        }
         
         // 2. Upsert today's entry in activity_logs
-        const { error } = await supabase.from('activity_logs').upsert({
-            user_id: uid,
+        const { error: logError } = await supabase.from('activity_logs').upsert({
+            user_id: uid.trim(),
             date: todayStr,
             steps: roundedSteps,
             calories: roundedCalories,
             distance: distance
         }, { onConflict: 'user_id,date' });
 
-        if (error) throw error;
+        if (logError) throw logError;
         res.json({ success: true, message: "iPhone data received!" });
     } catch (error) {
         console.error("Manual Sync Error:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
-
 // --- 3. START SERVER ---
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 CatchUp Server running on port ${PORT}`);
