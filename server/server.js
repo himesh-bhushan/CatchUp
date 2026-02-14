@@ -329,6 +329,67 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
     }
 });
 
+/* =========================================
+   ⌚ PART G: GOOGLE HEALTH SYNC (PRODUCTION)
+========================================= */
+
+// 2. Data Sync: Uses the saved Refresh Token to pull new steps
+app.post('/api/wearables/google-sync/:uid', async (req, res) => {
+    try {
+        const { uid } = req.params;
+
+        // Get refresh token from Supabase
+        const { data: user } = await supabase
+            .from('profiles')
+            .select('google_refresh_token')
+            .eq('id', uid)
+            .single();
+
+        if (!user?.google_refresh_token) return res.status(400).json({ error: "Google not connected" });
+
+        // Get new Access Token using the Refresh Token
+        const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+            refresh_token: user.google_refresh_token,
+            client_id: process.env.GOOGLE_CLIENT_ID,
+            client_secret: process.env.GOOGLE_CLIENT_SECRET,
+            grant_type: 'refresh_token',
+        });
+
+        const accessToken = tokenResponse.data.access_token;
+
+        // Fetch steps from Google Fit API
+        const fitResponse = await axios.post(
+            'https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate',
+            {
+                aggregateBy: [{ dataSourceId: "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps" }],
+                bucketByTime: { durationMillis: 86400000 }, 
+                startTimeMillis: Date.now() - 86400000,
+                endTimeMillis: Date.now()
+            },
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+
+        const steps = fitResponse.data.bucket[0]?.dataset[0]?.point[0]?.value[0]?.intVal || 0;
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        // ✅ Update Supabase with real data
+        // 1. Update the main profile
+        await supabase.from('profiles').update({ steps }).eq('id', uid);
+        
+        // 2. Upsert into activity_logs for the chart/history
+        await supabase.from('activity_logs').upsert({
+            user_id: uid,
+            date: todayStr,
+            steps: steps
+        }, { onConflict: 'user_id,date' });
+
+        res.json({ success: true, steps });
+    } catch (error) {
+        console.error("Google Sync Error:", error.message);
+        res.status(500).json({ error: "Sync failed" });
+    }
+});
+
 // --- 3. START SERVER ---
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 CatchUp Server running on port ${PORT}`);
