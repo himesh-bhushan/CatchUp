@@ -336,16 +336,18 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         const { uid } = req.params;
         const { steps, calories } = req.body; 
         const todayStr = new Date().toISOString().split('T')[0];
-        const now = new Date().toISOString(); // ✅ Added timestamp for DB
+        const now = new Date().toISOString(); // ✅ Added: Capture current timestamp
 
         const roundedSteps = Math.round(steps || 0);
         const roundedCalories = Math.round(calories || (roundedSteps * 0.04));
         const distance = parseFloat((roundedSteps * 0.0008).toFixed(2));
 
-        // 1. Update the user's main profile including last_synced_at
+        console.log(`Syncing for ${uid}: ${roundedSteps} steps, ${roundedCalories} cal`);
+
+        // 1. Update the user's main profile with steps AND timestamp
         await supabase.from('profiles').update({ 
             steps: roundedSteps,
-            last_synced_at: now // ✅ Added this line
+            last_synced_at: now // ✅ Added: Persist time in DB
         }).eq('id', uid);
         
         // 2. Upsert today's entry in activity_logs
