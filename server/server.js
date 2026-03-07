@@ -223,21 +223,142 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         const { uid } = req.params;
         const { data: user } = await supabase.from('profiles').select('*').eq('id', uid).single();
         
-        const doc = new PDFDocument();
+        const doc = new PDFDocument({ margin: 50, size: 'A4' });
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `inline; filename=Health_Report.pdf`);
+        res.setHeader('Content-Disposition', `inline; filename=${user?.first_name || 'CatchUp'}_Health_Report.pdf`);
         doc.pipe(res);
 
-        doc.fontSize(25).text('CatchUp Health Report', { align: 'center' });
-        doc.moveDown();
-        doc.fontSize(12).text(`Name: ${user?.first_name || "User"} ${user?.last_name || ""}`);
-        doc.text(`Date: ${new Date().toLocaleDateString()}`);
-        doc.moveDown();
-        doc.fontSize(16).text('Current Vitals', { underline: true });
-        doc.fontSize(12).text(`• Heart Rate: ${user?.heart_rate || 72} bpm`);
-        doc.text(`• Daily Steps: ${user?.steps || 0}`);
+        // --- Theme Colors ---
+        const bgColor = '#F4EFE6'; // Cream background from your image
+        const primaryRed = '#DE4B4E'; // Muted red for headers
+        const textColor = '#333333';
+        const lineColor = '#D8D0C5'; // Color for the underlines
+
+        // Draw background
+        doc.rect(0, 0, doc.page.width, doc.page.height).fill(bgColor);
+
+        // --- HEADER ---
+        doc.moveDown(2);
+        doc.fillColor(primaryRed)
+           .font('Helvetica-Bold')
+           .fontSize(42)
+           .text('HEALTH REPORT', { align: 'center', characterSpacing: 2 });
+        
+        doc.moveDown(2);
+
+        // --- HELPER FUNCTIONS FOR LAYOUT ---
+        const drawSectionHeader = (title, yPos) => {
+            doc.fillColor(primaryRed).fontSize(10).font('Helvetica-Bold').text(title.toUpperCase(), 50, yPos);
+            const textWidth = doc.widthOfString(title.toUpperCase());
+            // Draw the thin red line extending to the right
+            doc.moveTo(50 + textWidth + 10, yPos + 4).lineTo(545, yPos + 4).lineWidth(0.5).strokeColor(primaryRed).stroke();
+        };
+
+        const drawFormRow = (label, value, x, y, width, labelWidth = 100) => {
+            doc.fillColor(textColor).fontSize(10).font('Helvetica');
+            doc.text(label, x, y);
+            doc.text(':', x + labelWidth, y);
+            
+            if (value) {
+                doc.text(value, x + labelWidth + 15, y);
+            }
+            
+            // Draw the underline
+            doc.moveTo(x + labelWidth + 15, y + 10).lineTo(x + width, y + 10).lineWidth(0.5).strokeColor(lineColor).stroke();
+        };
+
+        // --- 1. DATE ---
+        let currentY = doc.y;
+        doc.fillColor(textColor).fontSize(10).font('Helvetica');
+        doc.text('Date:', 50, currentY);
+        doc.text(`${new Date().toLocaleDateString()}`, 90, currentY);
+        doc.moveDown(2);
+
+        // --- 2. PERSONAL INFORMATION ---
+        currentY = doc.y;
+        drawSectionHeader('PERSONAL INFORMATION', currentY);
+        
+        currentY += 25;
+        drawFormRow('Full Name', `${user?.first_name || ""} ${user?.last_name || ""}`.trim(), 50, currentY, 495);
+        currentY += 25;
+        drawFormRow('Date of Birth', user?.dob || '', 50, currentY, 495);
+        currentY += 25;
+        drawFormRow('Gender', user?.gender || '', 50, currentY, 495);
+        currentY += 25;
+        drawFormRow('Blood Type', user?.blood_type || '', 50, currentY, 495);
+
+        // --- 3. VITAL SIGNS SUMMARY (2 Columns) ---
+        currentY += 40;
+        drawSectionHeader('VITAL SIGNS SUMMARY', currentY);
+
+        currentY += 25;
+        // Left Column
+        drawFormRow('Blood Pressure', user?.blood_pressure || '', 50, currentY, 235, 80);
+        // Right Column
+        drawFormRow('Body Mass Index', user?.bmi || '', 310, currentY, 235, 80);
+
+        currentY += 25;
+        drawFormRow('Heart Rate', user?.heart_rate ? `${user.heart_rate} bpm` : '', 50, currentY, 235, 80);
+        drawFormRow('Weight', user?.weight ? `${user.weight} kg` : '', 310, currentY, 235, 80);
+
+        currentY += 25;
+        drawFormRow('Active Calories', user?.calories_burned ? `${user.calories_burned} kcal` : '', 50, currentY, 235, 80);
+        drawFormRow('Height', user?.height ? `${user.height} cm` : '', 310, currentY, 235, 80);
+
+        // --- 4. CLINICAL BACKGROUND ---
+        currentY += 40;
+        drawSectionHeader('CLINICAL BACKGROUND', currentY);
+
+        currentY += 25;
+        drawFormRow('Pre-existing\nCondition', user?.conditions || '', 50, currentY, 495);
+        currentY += 35; // Extra space for multi-line label
+        drawFormRow('Current\nMedication', user?.medication || '', 50, currentY, 495);
+        currentY += 35;
+        drawFormRow('Allergies', user?.allergies || '', 50, currentY, 495);
+
+
+        // ==========================================
+        //  HEALTH SCORING LOGIC CALCULATION
+        // ==========================================
+        
+        // 1. Heart Rate Score
+        const hr = user?.heart_rate || 72; // Default to 72 if missing
+        let hrScore = 100;
+        if (hr >= 60 && hr <= 80) hrScore = 100;
+        else if (hr > 80 && hr <= 100) hrScore = Math.max(0, 100 - (hr - 80) * 2);
+        else if (hr > 100) hrScore = Math.max(0, 60 - (hr - 100) * 3);
+        else if (hr < 60) hrScore = Math.max(0, 100 - (60 - hr) * 2);
+
+        // 2. Sleep Score
+        const sleepHrs = (user?.sleep_seconds || 28800) / 3600; // Default to 8 hrs
+        let sleepScore = 100;
+        if (sleepHrs >= 7 && sleepHrs <= 9) sleepScore = 100;
+        else sleepScore = Math.max(0, 100 - Math.abs(sleepHrs - 8) * 15);
+
+        // 3. Calorie Score
+        const activeCals = user?.calories_burned || 0;
+        const calScore = Math.min(100, (activeCals / 500) * 100);
+
+        // 4. Water Score (Assuming you add this to your DB, defaulting to 2L here)
+        const waterLiters = user?.water_intake || 2.0; 
+        const waterScore = Math.min(100, (waterLiters / 2.5) * 100);
+
+        // Final Weighted Score
+        const finalScore = Math.round((hrScore * 0.35) + (sleepScore * 0.25) + (calScore * 0.25) + (waterScore * 0.15));
+
+        // --- 5. AUTOMATED HEALTH SCORE ---
+        currentY += 50;
+        drawSectionHeader('AUTOMATED HEALTH SCORE', currentY);
+        
+        currentY += 25;
+        doc.fillColor(primaryRed).fontSize(24).font('Helvetica-Bold').text(`${finalScore} / 100`, 50, currentY);
+        
+        doc.fillColor(textColor).fontSize(9).font('Helvetica');
+        doc.text(`Heart Rate: ${Math.round(hrScore)}/100  |  Sleep: ${Math.round(sleepScore)}/100  |  Activity: ${Math.round(calScore)}/100  |  Hydration: ${Math.round(waterScore)}/100`, 50, currentY + 30);
+
         doc.end();
     } catch (error) {
+        console.error("PDF Error:", error);
         res.status(500).send("PDF Error");
     }
 });
