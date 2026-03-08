@@ -456,7 +456,6 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
     try {
         const cleanUid = req.params.uid.trim(); 
         
-        // 1. Catch ALL the new data coming from your iPhone
         const { 
             steps, 
             calories, 
@@ -474,13 +473,11 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         const roundedCalories = Math.round(calories || (roundedSteps * 0.04));
         const distance = parseFloat((roundedSteps * 0.0008).toFixed(2));
 
-        // Format the new metrics safely
         const sleepSeconds = sleep_hours ? Math.round(sleep_hours * 3600) : null;
         const bloodPressure = (bp_systolic && bp_diastolic) ? `${Math.round(bp_systolic)}/${Math.round(bp_diastolic)}` : null;
 
         console.log(`📡 Comprehensive Sync Attempt for: ${cleanUid}`);
 
-        // 2. Prepare the update payload dynamically (only update what your phone actually sends)
         const profileUpdates = {
             last_synced_at: now, 
             steps: roundedSteps,
@@ -492,18 +489,15 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         if (bloodPressure) profileUpdates.blood_pressure = bloodPressure;
         if (heart_rate) profileUpdates.heart_rate = heart_rate;
 
-        // 🟢 STEP 1: Update the Profiles table with everything
+        // 🟢 UPDATE 1: Update the Profiles table (Dashboard view)
         const { error: profileError } = await supabase
             .from('profiles')
             .update(profileUpdates)
             .eq('id', cleanUid);
 
-        if (profileError) {
-            console.error("❌ RLS Blocked Profile Update:", profileError.message);
-            return res.status(403).json({ error: profileError.message });
-        }
+        if (profileError) throw profileError;
 
-        // 🟢 STEP 2: Update the Activity Log (Daily Tracker)
+        // 🟢 UPDATE 2: Update the Activity Log (Daily Tracker)
         const { error: logError } = await supabase.from('activity_logs').upsert({
             user_id: cleanUid,
             date: todayStr,
@@ -514,9 +508,24 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
 
         if (logError) throw logError;
 
+        // 🟢 NEW UPDATE 3: Record Blood Pressure History (Graph view)
+        if (bp_systolic && bp_diastolic) {
+            const { error: bpLogError } = await supabase
+                .from('blood_pressure_logs')
+                .upsert({
+                    user_id: cleanUid,
+                    date: todayStr,
+                    systolic: Math.round(bp_systolic),
+                    diastolic: Math.round(bp_diastolic)
+                }, { onConflict: 'user_id,date' });
+
+            if (bpLogError) console.error("History Log Error:", bpLogError.message);
+        }
+
         res.json({ success: true, message: "Sync successful! Database updated." });
 
     } catch (error) {
+        console.error("Manual Sync Error:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
