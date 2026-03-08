@@ -508,6 +508,20 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
 
         if (logError) throw logError;
 
+        // 🟢 NEW: Record Sleep History
+        if (sleep_hours) {
+            const { error: sleepLogError } = await supabase
+                .from('sleep_logs')
+                .upsert({
+                    user_id: cleanUid,
+                    date: todayStr, // YYYY-MM-DD
+                    hours: parseFloat(sleep_hours),
+                    seconds: Math.round(sleep_hours * 3600)
+                }, { onConflict: 'user_id,date' });
+
+            if (sleepLogError) console.error("Sleep Log Error:", sleepLogError.message);
+        }
+
         // 🟢 NEW UPDATE 3: Record Blood Pressure History (Graph view)
         if (bp_systolic && bp_diastolic) {
             const { error: bpLogError } = await supabase
