@@ -455,7 +455,18 @@ app.post('/api/wearables/google-sync/:uid', async (req, res) => {
 app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
     try {
         const cleanUid = req.params.uid.trim(); 
-        const { steps, calories } = req.body; 
+        
+        // 1. Catch ALL the new data coming from your iPhone
+        const { 
+            steps, 
+            calories, 
+            water_liters, 
+            sleep_hours, 
+            bp_systolic, 
+            bp_diastolic, 
+            heart_rate 
+        } = req.body; 
+        
         const todayStr = new Date().toISOString().split('T')[0]; 
         const now = new Date().toISOString(); 
 
@@ -463,12 +474,28 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         const roundedCalories = Math.round(calories || (roundedSteps * 0.04));
         const distance = parseFloat((roundedSteps * 0.0008).toFixed(2));
 
-        console.log(`📡 Final Sync Attempt for: ${cleanUid}`);
+        // Format the new metrics safely
+        const sleepSeconds = sleep_hours ? Math.round(sleep_hours * 3600) : null;
+        const bloodPressure = (bp_systolic && bp_diastolic) ? `${Math.round(bp_systolic)}/${Math.round(bp_diastolic)}` : null;
 
-        // 🟢 STEP 1: Update the timestamp in Profiles
+        console.log(`📡 Comprehensive Sync Attempt for: ${cleanUid}`);
+
+        // 2. Prepare the update payload dynamically (only update what your phone actually sends)
+        const profileUpdates = {
+            last_synced_at: now, 
+            steps: roundedSteps,
+            calories_burned: roundedCalories
+        };
+        
+        if (water_liters) profileUpdates.water_intake = water_liters;
+        if (sleepSeconds) profileUpdates.sleep_seconds = sleepSeconds;
+        if (bloodPressure) profileUpdates.blood_pressure = bloodPressure;
+        if (heart_rate) profileUpdates.heart_rate = heart_rate;
+
+        // 🟢 STEP 1: Update the Profiles table with everything
         const { error: profileError } = await supabase
             .from('profiles')
-            .update({ last_synced_at: now, steps: roundedSteps })
+            .update(profileUpdates)
             .eq('id', cleanUid);
 
         if (profileError) {
@@ -476,7 +503,7 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
             return res.status(403).json({ error: profileError.message });
         }
 
-        // 🟢 STEP 2: Update the Activity Log
+        // 🟢 STEP 2: Update the Activity Log (Daily Tracker)
         const { error: logError } = await supabase.from('activity_logs').upsert({
             user_id: cleanUid,
             date: todayStr,
@@ -487,7 +514,7 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
 
         if (logError) throw logError;
 
-        res.json({ success: true, message: "Sync successful! Check your dashboard." });
+        res.json({ success: true, message: "Sync successful! Database updated." });
 
     } catch (error) {
         res.status(500).json({ error: error.message });
