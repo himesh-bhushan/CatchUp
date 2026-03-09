@@ -448,7 +448,6 @@ app.post('/api/wearables/google-sync/:uid', async (req, res) => {
     }
 });
 
-
 /* =========================================
    ⌚ APPLE SHORTCUTS SYNC (RECEIVER)
 ========================================= */
@@ -460,7 +459,7 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
             steps, 
             calories, 
             water_liters, 
-            sleep_hours, 
+            sleep_hours, // Now receiving raw seconds from Apple Shortcuts
             bp_systolic, 
             bp_diastolic, 
             heart_rate 
@@ -473,7 +472,9 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         const roundedCalories = Math.round(calories || (roundedSteps * 0.04));
         const distance = parseFloat((roundedSteps * 0.0008).toFixed(2));
 
-        const sleepSeconds = sleep_hours ? Math.round(sleep_hours * 3600) : null;
+        // ✅ FIX 1: Save the raw seconds exactly as they are sent from the shortcut
+        const sleepSeconds = sleep_hours ? Math.round(sleep_hours) : null;
+        
         const bloodPressure = (bp_systolic && bp_diastolic) ? `${Math.round(bp_systolic)}/${Math.round(bp_diastolic)}` : null;
 
         console.log(`📡 Comprehensive Sync Attempt for: ${cleanUid}`);
@@ -515,8 +516,10 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
                 .upsert({
                     user_id: cleanUid,
                     date: todayStr, // YYYY-MM-DD
-                    hours: parseFloat(sleep_hours),
-                    seconds: Math.round(sleep_hours * 3600)
+                    // ✅ FIX 2: Convert seconds back to hours for this specific table column if needed
+                    hours: parseFloat(sleep_hours) / 3600,
+                    // ✅ FIX 3: Store raw seconds
+                    seconds: Math.round(sleep_hours) 
                 }, { onConflict: 'user_id,date' });
 
             if (sleepLogError) console.error("Sleep Log Error:", sleepLogError.message);
@@ -543,6 +546,7 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
 // --- 3. START SERVER ---
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 CatchUp Server running on port ${PORT}`);
