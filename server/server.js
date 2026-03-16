@@ -223,14 +223,14 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         const { uid } = req.params;
         const { data: user } = await supabase.from('profiles').select('*').eq('id', uid).single();
         
-        // --- 🌟 Calculate BMI ---
+        // --- Calculate BMI ---
         let calculatedBmi = '';
         if (user?.weight && user?.height) {
             const heightInMeters = user.height / 100;
             calculatedBmi = (user.weight / (heightInMeters * heightInMeters)).toFixed(1);
         }
 
-        // --- 🌟 Format Clinical Background Data ---
+        // --- Format Clinical Background Data ---
         const formattedConditions = Array.isArray(user?.conditions) ? user.conditions.join(', ') : (user?.conditions || '');
         const formattedMedications = user?.medications || ''; 
         const formattedAllergies = user?.allergies || '';
@@ -239,7 +239,6 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         const doc = new PDFDocument({ margin: 50, size: 'A4' });
         res.setHeader('Content-Type', 'application/pdf');
         
-        // 🌟 FIX: Added quotes around the filename to prevent header crashes if the name has spaces
         res.setHeader('Content-Disposition', `inline; filename="${user?.first_name || 'CatchUp'}_Health_Report.pdf"`);
         doc.pipe(res);
 
@@ -268,15 +267,17 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
             doc.moveTo(50 + textWidth + 10, yPos + 4).lineTo(545, yPos + 4).lineWidth(0.5).strokeColor(primaryRed).stroke();
         };
 
+        // 🌟 UPDATED: Now automatically prints "Nil" if the value is empty
         const drawFormRow = (label, value, x, y, width, labelWidth = 100) => {
             doc.fillColor(textColor).fontSize(10).font('Helvetica');
             doc.text(label, x, y);
             doc.text(':', x + labelWidth, y);
             
-            if (value) {
-                // Cast the value to a string just in case it's an array or number to prevent PDFKit text errors
-                doc.text(String(value), x + labelWidth + 15, y);
-            }
+            // Check if value exists and isn't just empty spaces
+            const stringValue = value ? String(value).trim() : '';
+            const displayText = stringValue.length > 0 ? stringValue : 'Nil';
+            
+            doc.text(displayText, x + labelWidth + 15, y);
             
             doc.moveTo(x + labelWidth + 15, y + 10).lineTo(x + width, y + 10).lineWidth(0.5).strokeColor(lineColor).stroke();
         };
