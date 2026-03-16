@@ -223,22 +223,24 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         const { uid } = req.params;
         const { data: user } = await supabase.from('profiles').select('*').eq('id', uid).single();
         
-        // --- 🌟 NEW: Calculate BMI ---
+        // --- 🌟 Calculate BMI ---
         let calculatedBmi = '';
         if (user?.weight && user?.height) {
             const heightInMeters = user.height / 100;
             calculatedBmi = (user.weight / (heightInMeters * heightInMeters)).toFixed(1);
         }
 
-        // --- 🌟 NEW: Format Clinical Background Data ---
+        // --- 🌟 Format Clinical Background Data ---
         const formattedConditions = Array.isArray(user?.conditions) ? user.conditions.join(', ') : (user?.conditions || '');
-        const formattedMedications = user?.medications || ''; // Fixed typo: 'medications' instead of 'medication'
+        const formattedMedications = user?.medications || ''; 
         const formattedAllergies = user?.allergies || '';
         
-        const PDFDocument = require('pdfkit'); // Make sure pdfkit is imported at the top of your file
+        // Ensure PDFDocument is initialized correctly 
         const doc = new PDFDocument({ margin: 50, size: 'A4' });
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `inline; filename=${user?.first_name || 'CatchUp'}_Health_Report.pdf`);
+        
+        // 🌟 FIX: Added quotes around the filename to prevent header crashes if the name has spaces
+        res.setHeader('Content-Disposition', `inline; filename="${user?.first_name || 'CatchUp'}_Health_Report.pdf"`);
         doc.pipe(res);
 
         // --- Theme Colors ---
@@ -272,7 +274,8 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
             doc.text(':', x + labelWidth, y);
             
             if (value) {
-                doc.text(value, x + labelWidth + 15, y);
+                // Cast the value to a string just in case it's an array or number to prevent PDFKit text errors
+                doc.text(String(value), x + labelWidth + 15, y);
             }
             
             doc.moveTo(x + labelWidth + 15, y + 10).lineTo(x + width, y + 10).lineWidth(0.5).strokeColor(lineColor).stroke();
@@ -305,7 +308,7 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         currentY += 25;
         // Left Column
         drawFormRow('Blood Pressure', user?.blood_pressure || '', 50, currentY, 235, 80);
-        // Right Column (🌟 Updated to use calculated BMI)
+        // Right Column (BMI)
         drawFormRow('Body Mass Index', calculatedBmi, 310, currentY, 235, 80);
 
         currentY += 25;
@@ -320,7 +323,6 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         currentY += 40;
         drawSectionHeader('CLINICAL BACKGROUND', currentY);
 
-        // 🌟 Updated to use the safely formatted strings
         currentY += 25;
         drawFormRow('Pre-existing\nCondition', formattedConditions, 50, currentY, 495);
         currentY += 35; 
