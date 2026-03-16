@@ -223,16 +223,29 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         const { uid } = req.params;
         const { data: user } = await supabase.from('profiles').select('*').eq('id', uid).single();
         
+        // --- 🌟 NEW: Calculate BMI ---
+        let calculatedBmi = '';
+        if (user?.weight && user?.height) {
+            const heightInMeters = user.height / 100;
+            calculatedBmi = (user.weight / (heightInMeters * heightInMeters)).toFixed(1);
+        }
+
+        // --- 🌟 NEW: Format Clinical Background Data ---
+        const formattedConditions = Array.isArray(user?.conditions) ? user.conditions.join(', ') : (user?.conditions || '');
+        const formattedMedications = user?.medications || ''; // Fixed typo: 'medications' instead of 'medication'
+        const formattedAllergies = user?.allergies || '';
+        
+        const PDFDocument = require('pdfkit'); // Make sure pdfkit is imported at the top of your file
         const doc = new PDFDocument({ margin: 50, size: 'A4' });
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `inline; filename=${user?.first_name || 'CatchUp'}_Health_Report.pdf`);
         doc.pipe(res);
 
         // --- Theme Colors ---
-        const bgColor = '#F4EFE6'; // Cream background from your image
-        const primaryRed = '#DE4B4E'; // Muted red for headers
+        const bgColor = '#F4EFE6'; 
+        const primaryRed = '#DE4B4E'; 
         const textColor = '#333333';
-        const lineColor = '#D8D0C5'; // Color for the underlines
+        const lineColor = '#D8D0C5'; 
 
         // Draw background
         doc.rect(0, 0, doc.page.width, doc.page.height).fill(bgColor);
@@ -250,7 +263,6 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         const drawSectionHeader = (title, yPos) => {
             doc.fillColor(primaryRed).fontSize(10).font('Helvetica-Bold').text(title.toUpperCase(), 50, yPos);
             const textWidth = doc.widthOfString(title.toUpperCase());
-            // Draw the thin red line extending to the right
             doc.moveTo(50 + textWidth + 10, yPos + 4).lineTo(545, yPos + 4).lineWidth(0.5).strokeColor(primaryRed).stroke();
         };
 
@@ -263,7 +275,6 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
                 doc.text(value, x + labelWidth + 15, y);
             }
             
-            // Draw the underline
             doc.moveTo(x + labelWidth + 15, y + 10).lineTo(x + width, y + 10).lineWidth(0.5).strokeColor(lineColor).stroke();
         };
 
@@ -294,8 +305,8 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         currentY += 25;
         // Left Column
         drawFormRow('Blood Pressure', user?.blood_pressure || '', 50, currentY, 235, 80);
-        // Right Column
-        drawFormRow('Body Mass Index', user?.bmi || '', 310, currentY, 235, 80);
+        // Right Column (🌟 Updated to use calculated BMI)
+        drawFormRow('Body Mass Index', calculatedBmi, 310, currentY, 235, 80);
 
         currentY += 25;
         drawFormRow('Heart Rate', user?.heart_rate ? `${user.heart_rate} bpm` : '', 50, currentY, 235, 80);
@@ -309,12 +320,13 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         currentY += 40;
         drawSectionHeader('CLINICAL BACKGROUND', currentY);
 
+        // 🌟 Updated to use the safely formatted strings
         currentY += 25;
-        drawFormRow('Pre-existing\nCondition', user?.conditions || '', 50, currentY, 495);
-        currentY += 35; // Extra space for multi-line label
-        drawFormRow('Current\nMedication', user?.medication || '', 50, currentY, 495);
+        drawFormRow('Pre-existing\nCondition', formattedConditions, 50, currentY, 495);
+        currentY += 35; 
+        drawFormRow('Current\nMedication', formattedMedications, 50, currentY, 495);
         currentY += 35;
-        drawFormRow('Allergies', user?.allergies || '', 50, currentY, 495);
+        drawFormRow('Allergies', formattedAllergies, 50, currentY, 495);
 
 
         // ==========================================
@@ -322,7 +334,7 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         // ==========================================
         
         // 1. Heart Rate Score
-        const hr = user?.heart_rate || 72; // Default to 72 if missing
+        const hr = user?.heart_rate || 72; 
         let hrScore = 100;
         if (hr >= 60 && hr <= 80) hrScore = 100;
         else if (hr > 80 && hr <= 100) hrScore = Math.max(0, 100 - (hr - 80) * 2);
@@ -330,7 +342,7 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         else if (hr < 60) hrScore = Math.max(0, 100 - (60 - hr) * 2);
 
         // 2. Sleep Score
-        const sleepHrs = (user?.sleep_seconds || 28800) / 3600; // Default to 8 hrs
+        const sleepHrs = (user?.sleep_seconds || 28800) / 3600; 
         let sleepScore = 100;
         if (sleepHrs >= 7 && sleepHrs <= 9) sleepScore = 100;
         else sleepScore = Math.max(0, 100 - Math.abs(sleepHrs - 8) * 15);
@@ -339,7 +351,7 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         const activeCals = user?.calories_burned || 0;
         const calScore = Math.min(100, (activeCals / 500) * 100);
 
-        // 4. Water Score (Assuming you add this to your DB, defaulting to 2L here)
+        // 4. Water Score
         const waterLiters = user?.water_intake || 2.0; 
         const waterScore = Math.min(100, (waterLiters / 2.5) * 100);
 
