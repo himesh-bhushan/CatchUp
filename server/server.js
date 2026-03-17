@@ -500,4 +500,13 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
             }, { onConflict: 'user_id,date' });
         }
 
-        res.json({ success: true,
+        res.json({ success: true, message: "Sync successful!" });
+    } catch (error) {
+        console.error("Manual Sync Error:", error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 CatchUp Server running on port ${PORT}`);
+});
