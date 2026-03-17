@@ -6,6 +6,7 @@ import cors from 'cors';
 import axios from 'axios';
 import PDFDocument from 'pdfkit';
 import { createClient } from '@supabase/supabase-js';
+import nodemailer from 'nodemailer'; 
 
 // --- 1. SETUP ---
 const app = express();
@@ -267,7 +268,6 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
             doc.moveTo(50 + textWidth + 10, yPos + 4).lineTo(545, yPos + 4).lineWidth(0.5).strokeColor(primaryRed).stroke();
         };
 
-        // 🌟 UPDATED: Now automatically prints "Nil" if the value is empty
         const drawFormRow = (label, value, x, y, width, labelWidth = 100) => {
             doc.fillColor(textColor).fontSize(10).font('Helvetica');
             doc.text(label, x, y);
@@ -460,6 +460,68 @@ app.post('/api/wearables/google-sync/:uid', async (req, res) => {
     } catch (error) {
         console.error("Google Sync Error:", error.message);
         res.status(500).json({ error: "Sync failed" });
+    }
+});
+
+/* =========================================
+   📧 EMAIL APPLE HEALTH SHORTCUT
+========================================= */
+app.post('/api/send-tracker-email', async (req, res) => {
+    try {
+        const { email, userId, firstName } = req.body;
+
+        if (!email || !userId) {
+            return res.status(400).json({ error: "Missing email or user ID" });
+        }
+
+        // 1. Configure your email transporter 
+        // Replace with your actual email service credentials (Gmail, SendGrid, Resend, etc.)
+        const transporter = nodemailer.createTransport({
+            service: 'gmail', // Example using Gmail
+            auth: {
+                user: process.env.EMAIL_USER, // e.g., your-email@gmail.com
+                pass: process.env.EMAIL_APP_PASSWORD // Generate an "App Password" in Google Account settings
+            }
+        });
+
+        // 2. Draft the email content
+        const mailOptions = {
+            from: '"CatchUp Health" <noreply@catchup.page>',
+            to: email,
+            subject: 'Setup your CatchUp Apple Health Tracker 🍎',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+                    <h2>Hi ${firstName || 'there'},</h2>
+                    <p>You're just one step away from automatically syncing your daily activity rings with CatchUp!</p>
+                    
+                    <p><strong>Step 1:</strong> Copy your unique User ID below:</p>
+                    <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 16px; text-align: center; letter-spacing: 1px;">
+                        <strong>${userId}</strong>
+                    </div>
+
+                    <p><strong>Step 2:</strong> Download our secure Apple Health Shortcut to your iPhone:</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="https://www.icloud.com/shortcuts/525c6fb259844e4eb3e838d4553f77ca" 
+                           style="background-color: #DE4B4E; color: white; padding: 14px 28px; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 16px;">
+                           Download Apple Shortcut
+                        </a>
+                    </div>
+
+                    <p>When you install the shortcut, it will ask for your User ID. Paste the ID from Step 1, and you're good to go!</p>
+                    
+                    <p>Stay healthy,<br/>The CatchUp Team</p>
+                </div>
+            `
+        };
+
+        // 3. Send the email
+        await transporter.sendMail(mailOptions);
+        
+        res.status(200).json({ success: true, message: "Setup email sent successfully" });
+
+    } catch (error) {
+        console.error("Email Error:", error);
+        res.status(500).json({ error: "Failed to send email" });
     }
 });
 
