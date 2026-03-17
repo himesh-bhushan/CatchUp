@@ -464,7 +464,7 @@ app.post('/api/wearables/google-sync/:uid', async (req, res) => {
 });
 
 /* =========================================
-   📧 EMAIL APPLE HEALTH SHORTCUT
+   📧 EMAIL APPLE HEALTH SHORTCUT (RESEND)
 ========================================= */
 app.post('/api/send-tracker-email', async (req, res) => {
     try {
@@ -474,53 +474,49 @@ app.post('/api/send-tracker-email', async (req, res) => {
             return res.status(400).json({ error: "Missing email or user ID" });
         }
 
-        // 1. Configure your email transporter 
-        // Replace with your actual email service credentials (Gmail, SendGrid, Resend, etc.)
+        // 🌟 UPDATED: Configure Transporter for Resend SMTP
         const transporter = nodemailer.createTransport({
-            service: 'gmail', // Example using Gmail
+            host: 'smtp.resend.com',
+            secure: true,
+            port: 465,
             auth: {
-                user: process.env.EMAIL_USER, // e.g., your-email@gmail.com
-                pass: process.env.EMAIL_APP_PASSWORD // Generate an "App Password" in Google Account settings
-            }
+                user: 'resend', // This stays exactly as "resend"
+                pass: process.env.RESEND_API_KEY, 
+            },
         });
 
-        // 2. Draft the email content
         const mailOptions = {
-            from: '"CatchUp Health" <noreply@catchup.page>',
+            // 🌟 UPDATED: Use your verified domain or onboarding@resend.dev
+            from: `"CatchUp Health" <${process.env.EMAIL_FROM}>`,
             to: email,
             subject: 'Setup your CatchUp Apple Health Tracker 🍎',
             html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-                    <h2>Hi ${firstName || 'there'},</h2>
-                    <p>You're just one step away from automatically syncing your daily activity rings with CatchUp!</p>
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 12px;">
+                    <h2 style="color: #111;">Hi ${firstName || 'there'},</h2>
+                    <p>Sync your daily activity rings with CatchUp by following these two steps:</p>
                     
-                    <p><strong>Step 1:</strong> Copy your unique User ID below:</p>
-                    <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 16px; text-align: center; letter-spacing: 1px;">
-                        <strong>${userId}</strong>
+                    <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+                        <span style="display: block; color: #666; font-size: 12px; margin-bottom: 5px;">YOUR USER ID</span>
+                        <strong style="font-family: monospace; font-size: 20px; letter-spacing: 2px;">${userId}</strong>
                     </div>
 
-                    <p><strong>Step 2:</strong> Download our secure Apple Health Shortcut to your iPhone:</p>
                     <div style="text-align: center; margin: 30px 0;">
                         <a href="https://www.icloud.com/shortcuts/525c6fb259844e4eb3e838d4553f77ca" 
-                           style="background-color: #DE4B4E; color: white; padding: 14px 28px; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 16px;">
-                           Download Apple Shortcut
+                           style="background-color: #DE4B4E; color: white; padding: 16px 32px; text-decoration: none; border-radius: 30px; font-weight: bold; display: inline-block;">
+                           Install Apple Shortcut
                         </a>
                     </div>
 
-                    <p>When you install the shortcut, it will ask for your User ID. Paste the ID from Step 1, and you're good to go!</p>
-                    
-                    <p>Stay healthy,<br/>The CatchUp Team</p>
+                    <p style="font-size: 13px; color: #888;">Stay healthy,<br/>The CatchUp Team</p>
                 </div>
             `
         };
 
-        // 3. Send the email
         await transporter.sendMail(mailOptions);
-        
-        res.status(200).json({ success: true, message: "Setup email sent successfully" });
+        res.status(200).json({ success: true, message: "Email sent via Resend" });
 
     } catch (error) {
-        console.error("Email Error:", error);
+        console.error("Resend Email Error:", error);
         res.status(500).json({ error: "Failed to send email" });
     }
 });
