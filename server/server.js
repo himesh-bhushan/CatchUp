@@ -54,7 +54,6 @@ app.get('/', (req, res) => {
 /* =========================================
    👤 PART A: USER PROFILE API
 ========================================= */
-
 app.get('/api/users/:uid', async (req, res) => {
     try {
         const { uid } = req.params;
@@ -131,7 +130,6 @@ app.post('/api/users/sync', async (req, res) => {
 /* =========================================
    🎯 PART C: CALORIE GOAL API
 ========================================= */
-
 app.get('/api/users/:uid/goal', async (req, res) => {
     try {
         const { uid } = req.params;
@@ -224,44 +222,32 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         const { uid } = req.params;
         const { data: user } = await supabase.from('profiles').select('*').eq('id', uid).single();
         
-        // --- Calculate BMI ---
         let calculatedBmi = '';
         if (user?.weight && user?.height) {
             const heightInMeters = user.height / 100;
             calculatedBmi = (user.weight / (heightInMeters * heightInMeters)).toFixed(1);
         }
 
-        // --- Format Clinical Background Data ---
         const formattedConditions = Array.isArray(user?.conditions) ? user.conditions.join(', ') : (user?.conditions || '');
         const formattedMedications = user?.medications || ''; 
         const formattedAllergies = user?.allergies || '';
         
-        // Ensure PDFDocument is initialized correctly 
         const doc = new PDFDocument({ margin: 50, size: 'A4' });
         res.setHeader('Content-Type', 'application/pdf');
-        
         res.setHeader('Content-Disposition', `inline; filename="${user?.first_name || 'CatchUp'}_Health_Report.pdf"`);
         doc.pipe(res);
 
-        // --- Theme Colors ---
         const bgColor = '#F4EFE6'; 
         const primaryRed = '#DE4B4E'; 
         const textColor = '#333333';
         const lineColor = '#D8D0C5'; 
 
-        // Draw background
         doc.rect(0, 0, doc.page.width, doc.page.height).fill(bgColor);
 
-        // --- HEADER ---
         doc.moveDown(2);
-        doc.fillColor(primaryRed)
-           .font('Helvetica-Bold')
-           .fontSize(42)
-           .text('HEALTH REPORT', { align: 'center', characterSpacing: 2 });
-        
+        doc.fillColor(primaryRed).font('Helvetica-Bold').fontSize(42).text('HEALTH REPORT', { align: 'center', characterSpacing: 2 });
         doc.moveDown(2);
 
-        // --- HELPER FUNCTIONS FOR LAYOUT ---
         const drawSectionHeader = (title, yPos) => {
             doc.fillColor(primaryRed).fontSize(10).font('Helvetica-Bold').text(title.toUpperCase(), 50, yPos);
             const textWidth = doc.widthOfString(title.toUpperCase());
@@ -272,27 +258,19 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
             doc.fillColor(textColor).fontSize(10).font('Helvetica');
             doc.text(label, x, y);
             doc.text(':', x + labelWidth, y);
-            
-            // Check if value exists and isn't just empty spaces
             const stringValue = value ? String(value).trim() : '';
             const displayText = stringValue.length > 0 ? stringValue : 'Nil';
-            
             doc.text(displayText, x + labelWidth + 15, y);
-            
             doc.moveTo(x + labelWidth + 15, y + 10).lineTo(x + width, y + 10).lineWidth(0.5).strokeColor(lineColor).stroke();
         };
 
-        // --- 1. DATE ---
         let currentY = doc.y;
-        doc.fillColor(textColor).fontSize(10).font('Helvetica');
-        doc.text('Date:', 50, currentY);
+        doc.fillColor(textColor).fontSize(10).font('Helvetica').text('Date:', 50, currentY);
         doc.text(`${new Date().toLocaleDateString()}`, 90, currentY);
         doc.moveDown(2);
 
-        // --- 2. PERSONAL INFORMATION ---
         currentY = doc.y;
         drawSectionHeader('PERSONAL INFORMATION', currentY);
-        
         currentY += 25;
         drawFormRow('Full Name', `${user?.first_name || ""} ${user?.last_name || ""}`.trim(), 50, currentY, 495);
         currentY += 25;
@@ -302,28 +280,20 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         currentY += 25;
         drawFormRow('Blood Type', user?.blood_type || '', 50, currentY, 495);
 
-        // --- 3. VITAL SIGNS SUMMARY (2 Columns) ---
         currentY += 40;
         drawSectionHeader('VITAL SIGNS SUMMARY', currentY);
-
         currentY += 25;
-        // Left Column
         drawFormRow('Blood Pressure', user?.blood_pressure || '', 50, currentY, 235, 80);
-        // Right Column (BMI)
         drawFormRow('Body Mass Index', calculatedBmi, 310, currentY, 235, 80);
-
         currentY += 25;
         drawFormRow('Heart Rate', user?.heart_rate ? `${user.heart_rate} bpm` : '', 50, currentY, 235, 80);
         drawFormRow('Weight', user?.weight ? `${user.weight} kg` : '', 310, currentY, 235, 80);
-
         currentY += 25;
         drawFormRow('Active Calories', user?.calories_burned ? `${user.calories_burned} kcal` : '', 50, currentY, 235, 80);
         drawFormRow('Height', user?.height ? `${user.height} cm` : '', 310, currentY, 235, 80);
 
-        // --- 4. CLINICAL BACKGROUND ---
         currentY += 40;
         drawSectionHeader('CLINICAL BACKGROUND', currentY);
-
         currentY += 25;
         drawFormRow('Pre-existing\nCondition', formattedConditions, 50, currentY, 495);
         currentY += 35; 
@@ -331,12 +301,6 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         currentY += 35;
         drawFormRow('Allergies', formattedAllergies, 50, currentY, 495);
 
-
-        // ==========================================
-        //  HEALTH SCORING LOGIC CALCULATION
-        // ==========================================
-        
-        // 1. Heart Rate Score
         const hr = user?.heart_rate || 72; 
         let hrScore = 100;
         if (hr >= 60 && hr <= 80) hrScore = 100;
@@ -344,30 +308,23 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         else if (hr > 100) hrScore = Math.max(0, 60 - (hr - 100) * 3);
         else if (hr < 60) hrScore = Math.max(0, 100 - (60 - hr) * 2);
 
-        // 2. Sleep Score
         const sleepHrs = (user?.sleep_seconds || 28800) / 3600; 
         let sleepScore = 100;
         if (sleepHrs >= 7 && sleepHrs <= 9) sleepScore = 100;
         else sleepScore = Math.max(0, 100 - Math.abs(sleepHrs - 8) * 15);
 
-        // 3. Calorie Score
         const activeCals = user?.calories_burned || 0;
         const calScore = Math.min(100, (activeCals / 500) * 100);
 
-        // 4. Water Score
         const waterLiters = user?.water_intake || 2.0; 
         const waterScore = Math.min(100, (waterLiters / 2.5) * 100);
 
-        // Final Weighted Score
         const finalScore = Math.round((hrScore * 0.35) + (sleepScore * 0.25) + (calScore * 0.25) + (waterScore * 0.15));
 
-        // --- 5. AUTOMATED HEALTH SCORE ---
         currentY += 50;
         drawSectionHeader('AUTOMATED HEALTH SCORE', currentY);
-        
         currentY += 25;
         doc.fillColor(primaryRed).fontSize(24).font('Helvetica-Bold').text(`${finalScore} / 100`, 50, currentY);
-        
         doc.fillColor(textColor).fontSize(9).font('Helvetica');
         doc.text(`Heart Rate: ${Math.round(hrScore)}/100  |  Sleep: ${Math.round(sleepScore)}/100  |  Activity: ${Math.round(calScore)}/100  |  Hydration: ${Math.round(waterScore)}/100`, 50, currentY + 30);
 
@@ -381,8 +338,6 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
 /* =========================================
    ⌚ PART G: GOOGLE HEALTH SYNC (CONSOLIDATED)
 ========================================= */
-
-// 1. OAuth2 Callback
 app.get('/api/auth/google/callback', async (req, res) => {
     const { code, state } = req.query; 
     try {
@@ -409,7 +364,6 @@ app.get('/api/auth/google/callback', async (req, res) => {
     }
 });
 
-// 2. Data Sync
 app.post('/api/wearables/google-sync/:uid', async (req, res) => {
     try {
         const { uid } = req.params;
@@ -440,20 +394,12 @@ app.post('/api/wearables/google-sync/:uid', async (req, res) => {
 
         const steps = fitResponse.data.bucket[0]?.dataset[0]?.point[0]?.value[0]?.intVal || 0;
         const todayStr = new Date().toISOString().split('T')[0];
-
-        // Calculation for Activity Ring
         const calories = Math.round(steps * 0.04); 
         const distance = parseFloat((steps * 0.0008).toFixed(2));
 
         await supabase.from('profiles').update({ steps }).eq('id', uid);
-        
-        // This is the most important part for your Dashboard Ring
         await supabase.from('activity_logs').upsert({
-            user_id: uid,
-            date: todayStr,
-            steps: steps,
-            calories: calories,
-            distance: distance
+            user_id: uid, date: todayStr, steps: steps, calories: calories, distance: distance
         }, { onConflict: 'user_id,date' });
 
         res.json({ success: true, steps, calories });
@@ -474,7 +420,7 @@ app.post('/api/send-tracker-email', async (req, res) => {
             return res.status(400).json({ error: "Missing email or user ID" });
         }
 
-        // 🌟 MOVED INSIDE ROUTE: Configure Transporter for Resend SMTP
+        // 🌟 Transporter is now correctly inside the function
         const transporter = nodemailer.createTransport({
             host: 'smtp.resend.com',
             secure: true,
@@ -493,19 +439,16 @@ app.post('/api/send-tracker-email', async (req, res) => {
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 12px;">
                     <h2 style="color: #111;">Hi ${firstName || 'there'},</h2>
                     <p>Sync your daily activity rings with CatchUp by following these two steps:</p>
-                    
                     <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
                         <span style="display: block; color: #666; font-size: 12px; margin-bottom: 5px;">YOUR USER ID</span>
                         <strong style="font-family: monospace; font-size: 20px; letter-spacing: 2px;">${userId}</strong>
                     </div>
-
                     <div style="text-align: center; margin: 30px 0;">
                         <a href="https://www.icloud.com/shortcuts/525c6fb259844e4eb3e838d4553f77ca" 
                            style="background-color: #DE4B4E; color: white; padding: 16px 32px; text-decoration: none; border-radius: 30px; font-weight: bold; display: inline-block;">
                            Install Apple Shortcut
                         </a>
                     </div>
-
                     <p style="font-size: 13px; color: #888;">Stay healthy,<br/>The CatchUp Team</p>
                 </div>
             `
@@ -513,7 +456,6 @@ app.post('/api/send-tracker-email', async (req, res) => {
 
         await transporter.sendMail(mailOptions);
         res.status(200).json({ success: true, message: "Email sent via Resend" });
-
     } catch (error) {
         console.error("Resend Email Error:", error);
         res.status(500).json({ error: "Failed to send email" });
@@ -526,87 +468,36 @@ app.post('/api/send-tracker-email', async (req, res) => {
 app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
     try {
         const cleanUid = req.params.uid.trim(); 
-        
-        const { 
-            steps, 
-            calories, 
-            water_liters, 
-            sleep_hours, 
-            bp_systolic, 
-            bp_diastolic, 
-            heart_rate 
-        } = req.body; 
-        
+        const { steps, calories, water_liters, sleep_hours, bp_systolic, bp_diastolic, heart_rate } = req.body; 
         const todayStr = new Date().toISOString().split('T')[0]; 
         const now = new Date().toISOString(); 
-
         const roundedSteps = Math.round(steps || 0);
         const roundedCalories = Math.round(calories || (roundedSteps * 0.04));
         const distance = parseFloat((roundedSteps * 0.0008).toFixed(2));
-
         const sleepSeconds = sleep_hours ? Math.round(sleep_hours) : null;
-        
         const bloodPressure = (bp_systolic && bp_diastolic) ? `${Math.round(bp_systolic)}/${Math.round(bp_diastolic)}` : null;
 
-        const profileUpdates = {
-            last_synced_at: now, 
-            steps: roundedSteps,
-            calories_burned: roundedCalories
-        };
-        
+        const profileUpdates = { last_synced_at: now, steps: roundedSteps, calories_burned: roundedCalories };
         if (water_liters) profileUpdates.water_intake = water_liters;
         if (sleepSeconds) profileUpdates.sleep_seconds = sleepSeconds;
         if (bloodPressure) profileUpdates.blood_pressure = bloodPressure;
         if (heart_rate) profileUpdates.heart_rate = heart_rate;
 
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .update(profileUpdates)
-            .eq('id', cleanUid);
-
-        if (profileError) throw profileError;
-
-        const { error: logError } = await supabase.from('activity_logs').upsert({
-            user_id: cleanUid,
-            date: todayStr,
-            steps: roundedSteps,
-            calories: roundedCalories,
-            distance: distance
+        await supabase.from('profiles').update(profileUpdates).eq('id', cleanUid);
+        await supabase.from('activity_logs').upsert({
+            user_id: cleanUid, date: todayStr, steps: roundedSteps, calories: roundedCalories, distance: distance
         }, { onConflict: 'user_id,date' });
 
-        if (logError) throw logError;
-
         if (sleep_hours) {
-            await supabase
-                .from('sleep_logs')
-                .upsert({
-                    user_id: cleanUid,
-                    date: todayStr, 
-                    hours: parseFloat(sleep_hours) / 3600,
-                    seconds: Math.round(sleep_hours) 
-                }, { onConflict: 'user_id,date' });
+            await supabase.from('sleep_logs').upsert({
+                user_id: cleanUid, date: todayStr, hours: parseFloat(sleep_hours) / 3600, seconds: Math.round(sleep_hours) 
+            }, { onConflict: 'user_id,date' });
         }
 
         if (bp_systolic && bp_diastolic) {
-            await supabase
-                .from('blood_pressure_logs')
-                .upsert({
-                    user_id: cleanUid,
-                    date: todayStr,
-                    systolic: Math.round(bp_systolic),
-                    diastolic: Math.round(bp_diastolic)
-                }, { onConflict: 'user_id,date' });
+            await supabase.from('blood_pressure_logs').upsert({
+                user_id: cleanUid, date: todayStr, systolic: Math.round(bp_systolic), diastolic: Math.round(bp_diastolic)
+            }, { onConflict: 'user_id,date' });
         }
 
-        res.json({ success: true, message: "Sync successful! Database updated." });
-
-    } catch (error) {
-        console.error("Manual Sync Error:", error.message);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// --- 3. START SERVER ---
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 CatchUp Server running on port ${PORT}`);
-});
+        res.json({ success: true,
