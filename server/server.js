@@ -474,19 +474,18 @@ app.post('/api/send-tracker-email', async (req, res) => {
             return res.status(400).json({ error: "Missing email or user ID" });
         }
 
-        // 🌟 UPDATED: Configure Transporter for Resend SMTP
+        // 🌟 MOVED INSIDE ROUTE: Configure Transporter for Resend SMTP
         const transporter = nodemailer.createTransport({
             host: 'smtp.resend.com',
             secure: true,
             port: 465,
             auth: {
-                user: 'resend', // This stays exactly as "resend"
+                user: 'resend', 
                 pass: process.env.RESEND_API_KEY, 
             },
         });
 
         const mailOptions = {
-            // 🌟 UPDATED: Use your verified domain or onboarding@resend.dev
             from: `"CatchUp Health" <${process.env.EMAIL_FROM}>`,
             to: email,
             subject: 'Setup your CatchUp Apple Health Tracker 🍎',
@@ -532,7 +531,7 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
             steps, 
             calories, 
             water_liters, 
-            sleep_hours, // Now receiving raw seconds from Apple Shortcuts
+            sleep_hours, 
             bp_systolic, 
             bp_diastolic, 
             heart_rate 
@@ -545,12 +544,9 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         const roundedCalories = Math.round(calories || (roundedSteps * 0.04));
         const distance = parseFloat((roundedSteps * 0.0008).toFixed(2));
 
-        // ✅ FIX 1: Save the raw seconds exactly as they are sent from the shortcut
         const sleepSeconds = sleep_hours ? Math.round(sleep_hours) : null;
         
         const bloodPressure = (bp_systolic && bp_diastolic) ? `${Math.round(bp_systolic)}/${Math.round(bp_diastolic)}` : null;
-
-        console.log(`📡 Comprehensive Sync Attempt for: ${cleanUid}`);
 
         const profileUpdates = {
             last_synced_at: now, 
@@ -563,7 +559,6 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         if (bloodPressure) profileUpdates.blood_pressure = bloodPressure;
         if (heart_rate) profileUpdates.heart_rate = heart_rate;
 
-        // 🟢 UPDATE 1: Update the Profiles table (Dashboard view)
         const { error: profileError } = await supabase
             .from('profiles')
             .update(profileUpdates)
@@ -571,7 +566,6 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
 
         if (profileError) throw profileError;
 
-        // 🟢 UPDATE 2: Update the Activity Log (Daily Tracker)
         const { error: logError } = await supabase.from('activity_logs').upsert({
             user_id: cleanUid,
             date: todayStr,
@@ -582,25 +576,19 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
 
         if (logError) throw logError;
 
-        // 🟢 NEW: Record Sleep History
         if (sleep_hours) {
-            const { error: sleepLogError } = await supabase
+            await supabase
                 .from('sleep_logs')
                 .upsert({
                     user_id: cleanUid,
-                    date: todayStr, // YYYY-MM-DD
-                    // ✅ FIX 2: Convert seconds back to hours for this specific table column if needed
+                    date: todayStr, 
                     hours: parseFloat(sleep_hours) / 3600,
-                    // ✅ FIX 3: Store raw seconds
                     seconds: Math.round(sleep_hours) 
                 }, { onConflict: 'user_id,date' });
-
-            if (sleepLogError) console.error("Sleep Log Error:", sleepLogError.message);
         }
 
-        // 🟢 NEW UPDATE 3: Record Blood Pressure History (Graph view)
         if (bp_systolic && bp_diastolic) {
-            const { error: bpLogError } = await supabase
+            await supabase
                 .from('blood_pressure_logs')
                 .upsert({
                     user_id: cleanUid,
@@ -608,8 +596,6 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
                     systolic: Math.round(bp_systolic),
                     diastolic: Math.round(bp_diastolic)
                 }, { onConflict: 'user_id,date' });
-
-            if (bpLogError) console.error("History Log Error:", bpLogError.message);
         }
 
         res.json({ success: true, message: "Sync successful! Database updated." });
