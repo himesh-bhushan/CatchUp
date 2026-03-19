@@ -9,7 +9,8 @@ import cors from 'cors';
 import axios from 'axios';
 import PDFDocument from 'pdfkit';
 import { createClient } from '@supabase/supabase-js';
-import nodemailer from 'nodemailer'; 
+import { Resend } from 'resend'; // 🌟 Put this at the VERY top with your other imports
+
 
 // --- 1. SETUP ---
 const app = express();
@@ -412,8 +413,8 @@ app.post('/api/wearables/google-sync/:uid', async (req, res) => {
     }
 });
 
-/* =========================================
-   📧 EMAIL APPLE HEALTH SHORTCUT (GMAIL)
+//* =========================================
+   📧 EMAIL APPLE HEALTH SHORTCUT (RESEND HTTPS API)
 ========================================= */
 app.post('/api/send-tracker-email', async (req, res) => {
     try {
@@ -423,25 +424,17 @@ app.post('/api/send-tracker-email', async (req, res) => {
             return res.status(400).json({ error: "Missing email or user ID" });
         }
 
-        // 🌟 1. Configure Transporter for Gmail
-        const transporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true, // Use SSL
-            auth: {
-                user: process.env.EMAIL_USER, 
-                pass: process.env.EMAIL_APP_PASSWORD, 
-            },
-            tls: {
-                // This prevents cloud servers from rejecting the certificate
-                rejectUnauthorized: false 
-            }
-        });
+        // 🌟 Initialize Resend
+        const resend = new Resend(process.env.RESEND_API_KEY);
 
-        // 🌟 2. Draft the email
-        const mailOptions = {
-            from: `"CatchUp Health" <${process.env.EMAIL_USER}>`,
-            to: email, // This will send to whatever user is currently logged into CatchUp
+        // 🌟 Send via HTTPS (Bypasses Render's Port 465 Block)
+        const { data, error } = await resend.emails.send({
+            // You must use this 'from' address until you verify a custom domain on Resend
+            from: 'CatchUp Health <onboarding@resend.dev>', 
+            
+            // ⚠️ CRITICAL FOR TESTING: In Sandbox mode, this MUST be the email address you used to sign up for Resend!
+            to: [email], 
+            
             subject: 'Setup your CatchUp Apple Health Tracker 🍎',
             html: `
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 12px;">
@@ -460,14 +453,17 @@ app.post('/api/send-tracker-email', async (req, res) => {
                     <p style="font-size: 13px; color: #888;">Stay healthy,<br/>The CatchUp Team</p>
                 </div>
             `
-        };
+        });
 
-        // 🌟 3. Send the email
-        await transporter.sendMail(mailOptions);
-        res.status(200).json({ success: true, message: "Email sent via Gmail" });
+        if (error) {
+            console.error("Resend API Error:", error);
+            return res.status(400).json({ error: error.message });
+        }
 
-    } catch (error) {
-        console.error("Gmail Error:", error);
+        res.status(200).json({ success: true, message: "Email sent successfully!" });
+
+    } catch (err) {
+        console.error("Server Crash:", err);
         res.status(500).json({ error: "Failed to send email" });
     }
 });
