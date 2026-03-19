@@ -413,9 +413,9 @@ app.post('/api/wearables/google-sync/:uid', async (req, res) => {
     }
 });
 
-//* =========================================
-   📧 EMAIL APPLE HEALTH SHORTCUT (RESEND HTTPS API)
-========================================= */
+// =========================================
+// 📧 EMAIL APPLE HEALTH SHORTCUT (RESEND HTTPS API)
+// =========================================
 app.post('/api/send-tracker-email', async (req, res) => {
     try {
         const { email, userId, firstName } = req.body;
