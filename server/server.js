@@ -422,11 +422,17 @@ app.post('/api/send-tracker-email', async (req, res) => {
 
         // 🌟 1. Configure Transporter for Gmail
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true, // Use SSL
             auth: {
                 user: process.env.EMAIL_USER, 
                 pass: process.env.EMAIL_APP_PASSWORD, 
             },
+            tls: {
+                // This prevents cloud servers from rejecting the certificate
+                rejectUnauthorized: false 
+            }
         });
 
         // 🌟 2. Draft the email
