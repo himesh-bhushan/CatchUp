@@ -430,7 +430,7 @@ app.post('/api/send-tracker-email', async (req, res) => {
         // 🌟 Send via HTTPS (Bypasses Render's Port 465 Block)
         const { data, error } = await resend.emails.send({
             // You must use this 'from' address until you verify a custom domain on Resend
-            from: 'CatchUp Health <onboarding@resend.dev>', 
+            from: 'CatchUp Health <hello@catchup.page>', 
             
             // ⚠️ CRITICAL FOR TESTING: In Sandbox mode, this MUST be the email address you used to sign up for Resend!
             to: [email], 
