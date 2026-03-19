@@ -410,7 +410,7 @@ app.post('/api/wearables/google-sync/:uid', async (req, res) => {
 });
 
 /* =========================================
-   📧 EMAIL APPLE HEALTH SHORTCUT (RESEND)
+   📧 EMAIL APPLE HEALTH SHORTCUT (GMAIL)
 ========================================= */
 app.post('/api/send-tracker-email', async (req, res) => {
     try {
@@ -420,20 +420,19 @@ app.post('/api/send-tracker-email', async (req, res) => {
             return res.status(400).json({ error: "Missing email or user ID" });
         }
 
-        // 🌟 Transporter is now correctly inside the function
+        // 🌟 1. Configure Transporter for Gmail
         const transporter = nodemailer.createTransport({
-            host: 'smtp.resend.com',
-            secure: true,
-            port: 465,
+            service: 'gmail',
             auth: {
-                user: 'resend', 
-                pass: process.env.RESEND_API_KEY, 
+                user: process.env.EMAIL_USER, 
+                pass: process.env.EMAIL_APP_PASSWORD, 
             },
         });
 
+        // 🌟 2. Draft the email
         const mailOptions = {
-            from: `"CatchUp Health" <${process.env.EMAIL_FROM}>`,
-            to: email,
+            from: `"CatchUp Health" <${process.env.EMAIL_USER}>`,
+            to: email, // This will send to whatever user is currently logged into CatchUp
             subject: 'Setup your CatchUp Apple Health Tracker 🍎',
             html: `
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 12px;">
@@ -454,10 +453,12 @@ app.post('/api/send-tracker-email', async (req, res) => {
             `
         };
 
+        // 🌟 3. Send the email
         await transporter.sendMail(mailOptions);
-        res.status(200).json({ success: true, message: "Email sent via Resend" });
+        res.status(200).json({ success: true, message: "Email sent via Gmail" });
+
     } catch (error) {
-        console.error("Resend Email Error:", error);
+        console.error("Gmail Error:", error);
         res.status(500).json({ error: "Failed to send email" });
     }
 });
