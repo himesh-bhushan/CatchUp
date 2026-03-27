@@ -1,7 +1,6 @@
 import ssEnglish from "/images/image_1774281602158.png";
 import ssChinese from "/images/image_1774281695862.png";
 import ssMelayu from "/images/image_1774283252783.png";
-import mascotRaise from "/images/raise-hand_1774283085862.png";
 
 const langs = [
   {
@@ -37,10 +36,6 @@ export default function LanguageSection() {
           CatchUp is fully localised in three languages — every label, goal, and notification
           translated natively. No more health apps that feel like they weren't made for you.
         </p>
-      </div>
-
-      <div className="lang-mascot-wrap">
-        <img src={mascotRaise} alt="CatchUp mascot celebrating" className="lang-mascot" />
       </div>
 
       <div className="lang-grid">
