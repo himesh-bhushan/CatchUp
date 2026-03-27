@@ -1,4 +1,4 @@
 {
-  "buildCommand": "cd artifacts/catchup-landing && npm install && npm run build",
+  "buildCommand": "npm install && npm run build",
   "outputDirectory": "artifacts/catchup-landing/dist"
 }
