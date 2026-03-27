@@ -1,0 +1,60 @@
+Build a modern, highly polished React marketing landing page for a health and fitness tracking app called "CatchUp". Use Vite, React, and plain CSS. Please install and use react-icons for the icons.
+
+The Vibe & Styling:
+The design should feel like a mix of Apple Health and Duolingo—friendly, clean, and approachable. Use large border-radiuses (e.g., 24px to 40px) and glassmorphism effects for the cards.
+
+Color Palette:
+
+Main Background: Soft warm peach (#EAC4B3)
+
+Primary Action Color: Vibrant Tomato Red (#DE4B4E)
+
+Text Colors: Deep dark gray for headings (#111111), medium gray for body text (#666666)
+
+Card Backgrounds: Pure white (#FFFFFF) or frosted glass (rgba(255, 255, 255, 0.6) with a backdrop-filter blur)
+
+Please structure the single-page app into these 4 sections:
+
+1. Navigation Bar
+
+Layout: Flexbox, space between.
+
+Left side: A logo consisting of a tomato emoji 🍅 and the text "Marketing" in a bold font.
+
+Right side: A plain text "Log In" button and a frosted glass pill-shaped "Get Started" button.
+
+2. Hero Section
+
+Layout: 2-column split (Left text, Right visual).
+
+Left side: A massive headline: "Catch up with your best self." A subtitle: "Sync your Apple Health, close your daily rings, and compete with friends. Your all-in-one health dashboard for steps, sleep, vitals, and more." A large pill-shaped primary CTA button in Tomato Red saying "Start Tracking for Free". Underneath, tiny text: "Available in English, 中文, and Bahasa Melayu."
+
+Right side (Visual Mockup): Create a tilted, floating frosted glass card. Inside it, put a red Activity Ring icon, a bold title "Activity Ring", and text "80% Completed Today". Give this card a soft, deep drop shadow so it looks 3D.
+
+3. Core Features Grid
+
+Background: Make this section's background pure white (#FFFFFF) with a massive top-left and top-right border radius (e.g., 80px) so it swoops up over the peach background.
+
+Header: Centered. Headline: "Everything you need to stay healthy." Subtitle: "We do the math. You do the moving."
+
+Grid: A clean 3-column CSS grid. Create 5 feature cards. Each card needs a white background, a soft shadow, a 24px border radius, a colored icon from react-icons, a bold title, and a short description.
+
+The 5 Features:
+
+"Health Sharing & Leaderboards" (Two people icon). "Build your network, compete on the podium, and earn the Monthly Mover crown together."
+
+"CatchUp Chatbot" (Message icon). "Have a health question? Chat with our smart AI assistant for personalized wellness tips."
+
+"Biomarker PDF Reports" (Document icon). "Instantly download a beautifully formatted health report for your doctor."
+
+"Automatic Syncing" (Refresh arrows icon). "Seamlessly pull data from your favorite wearables."
+
+"Track All Vitals" (Heartbeat icon). "Monitor your blood pressure, sleep, heart rate, and water intake."
+
+4. Bottom CTA & Footer
+
+Background: Very light gray (#FCFCFC).
+
+Content: Huge centered headline "Ready to close your rings?", subtitle "Join CatchUp today and start your journey to better health." A large Tomato Red button: "Create Your Account".
+
+Footer: Centered gray text: "© 2026 CatchUp Health. All rights reserved."
