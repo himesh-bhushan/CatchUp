@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import catchupLogo from "@assets/catch-up_1774283064298.png";
+import catchupLogo from "/images/catch-up_1774283064298.png";
 
 const links = [
   { label: "Features", href: "#features" },

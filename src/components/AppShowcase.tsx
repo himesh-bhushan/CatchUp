@@ -1,7 +1,7 @@
 import { useState } from "react";
-import ssLight from "@assets/image_1774281602158.png";
-import ssDark from "@assets/image_1774281672389.png";
-import ssHighContrast from "@assets/image_1774283208204.png";
+import ssLight from "/images/image_1774281602158.png";
+import ssDark from "/images/image_1774281672389.png";
+import ssHighContrast from "/images/image_1774283208204.png";
 
 type Mode = "light" | "dark" | "high-contrast";
 

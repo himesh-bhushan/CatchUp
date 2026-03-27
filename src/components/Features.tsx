@@ -1,11 +1,11 @@
-import ssLight from "@assets/image_1774281602158.png";
-import ssLeaderboard from "@assets/image_1774281625463.png";
-import ssChat from "@assets/image_1774281658157.png";
-import ssReport from "@assets/image_1774281634818.png";
-import ssRecommendations from "@assets/image_1774281617435.png";
-import avatar1 from "@assets/avatar1_1774283268371.png";
-import avatar2 from "@assets/avatar2_1774283268371.png";
-import avatar3 from "@assets/avatar3_1774283268371.png";
+import ssLight from "/images/image_1774281602158.png";
+import ssLeaderboard from "/images/image_1774281625463.png";
+import ssChat from "/images/image_1774281658157.png";
+import ssReport from "/images/image_1774281634818.png";
+import ssRecommendations from "/images/image_1774281617435.png";
+import avatar1 from "/images/avatar1_1774283268371.png";
+import avatar2 from "/images/avatar2_1774283268371.png";
+import avatar3 from "/images/avatar3_1774283268371.png";
 
 function BrowserFrame({ src, alt, dark = false }: { src: string; alt: string; dark?: boolean }) {
   return (

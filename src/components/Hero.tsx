@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import ssLight from "@assets/image_1774281602158.png";
+import ssLight from "/images/image_1774281602158.png";
 
 export default function Hero() {
   const ref = useRef<HTMLDivElement>(null);

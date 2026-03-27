@@ -1,4 +1,4 @@
-import tomatoImg from "@assets/tomato_1774283104209.png";
+import tomatoImg from "/images/tomato_1774283104209.png";
 
 export default function BottomCTA() {
   return (

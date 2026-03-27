@@ -1,7 +1,7 @@
-import ssEnglish from "@assets/image_1774281602158.png";
-import ssChinese from "@assets/image_1774281695862.png";
-import ssMelayu from "@assets/image_1774283252783.png";
-import mascotRaise from "@assets/raise-hand_1774283085862.png";
+import ssEnglish from "/images/image_1774281602158.png";
+import ssChinese from "/images/image_1774281695862.png";
+import ssMelayu from "/images/image_1774283252783.png";
+import mascotRaise from "/images/raise-hand_1774283085862.png";
 
 const langs = [
   {

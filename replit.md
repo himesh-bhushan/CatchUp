@@ -96,7 +96,7 @@ Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHea
 React + Vite marketing landing page for **CatchUp** health app at www.catchup.page.
 
 - Apple-inspired minimal design: large typography, generous whitespace, no icon clutter
-- Real app screenshots imported via `@assets/` alias (pointing to workspace `attached_assets/`)
+- Real app screenshots imported via `/images/` alias (pointing to workspace `attached_assets/`)
 - Screenshots cropped with CSS `object-fit: cover` + `object-position` to show specific UI regions
 - Sections: Navbar, Hero (browser-frame screenshot), Tagline, Feature Blocks (5 alternating peach/dark/white), App Showcase (theme switcher), About, CTA, Footer
 - Theme: warm peach (#EBC4B3), tomato red (#DE4B4E), dark (#0D0D0D), white cards
