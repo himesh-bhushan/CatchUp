@@ -24,7 +24,10 @@ export default function BottomCTA() {
       <footer className="footer-apple">
         <div className="footer-apple-inner">
           <div className="footer-col footer-col-brand">
-            <span className="footer-logo">🍅 CatchUp</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <img src="/favicon.ico" alt="logo" style={{ width: "24px", height: "24px" }} />
+              <span>CatchUp</span>
+            </div>
             <p>Your friendly health companion, built for Southeast Asia.</p>
             <a href="https://www.catchup.page" target="_blank" rel="noopener noreferrer">www.catchup.page ↗</a>
           </div>
@@ -42,7 +45,7 @@ export default function BottomCTA() {
             <a href="#themes">Light Mode</a>
             <a href="#themes">Dark Mode</a>
             <a href="#themes">High Contrast</a>
-            <a href="#languages">中文 Support</a>
+            <a href="#languages">Chinese</a>
             <a href="#languages">Bahasa Melayu</a>
           </div>
           <div className="footer-col">
