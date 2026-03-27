@@ -26,7 +26,7 @@ export default function BottomCTA() {
           <div className="footer-col footer-col-brand">
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <img src="/favicon.ico" alt="logo" style={{ width: "24px", height: "24px" }} />
-              <span>CatchUp</span>
+              <span className="footer-logo">CatchUp</span>
             </div>
             <p>Your friendly health companion, built for Southeast Asia.</p>
             <a href="https://www.catchup.page" target="_blank" rel="noopener noreferrer">www.catchup.page ↗</a>
