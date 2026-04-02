@@ -221,11 +221,23 @@ app.get('/api/wearables/stats/:uid', async (req, res) => {
 /* =========================================
    📄 PART F: PDF REPORT GENERATOR
 ========================================= */
+// 🌟 ONLY THIS SECTION WAS UPDATED
 app.get('/api/report/pdf/:uid', async (req, res) => {
     try {
         const { uid } = req.params;
+        
+        const todayStr = new Date().toISOString().split('T')[0];
+
         const { data: user } = await supabase.from('profiles').select('*').eq('id', uid).single();
         
+        const { data: actLog } = await supabase.from('activity_logs').select('calories').eq('user_id', uid).eq('date', todayStr).maybeSingle();
+        const { data: slpLog } = await supabase.from('sleep_logs').select('seconds').eq('user_id', uid).eq('date', todayStr).maybeSingle();
+        const { data: wtrLog } = await supabase.from('water_logs').select('water_ml').eq('user_id', uid).eq('date', todayStr).maybeSingle();
+
+        const activeCals = actLog?.calories || 0;
+        const sleepSecs = slpLog?.seconds || user?.sleep_seconds || 0;
+        const waterMl = wtrLog?.water_ml || user?.water_intake || 0;
+
         let calculatedBmi = '';
         if (user?.weight && user?.height) {
             const heightInMeters = user.height / 100;
@@ -293,8 +305,11 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         drawFormRow('Heart Rate', user?.heart_rate ? `${user.heart_rate} bpm` : '', 50, currentY, 235, 80);
         drawFormRow('Weight', user?.weight ? `${user.weight} kg` : '', 310, currentY, 235, 80);
         currentY += 25;
-        drawFormRow('Active Calories', user?.calories_burned ? `${user.calories_burned} kcal` : '', 50, currentY, 235, 80);
+        
+        drawFormRow('Active Calories', activeCals > 0 ? `${activeCals} kcal` : '', 50, currentY, 235, 80);
         drawFormRow('Height', user?.height ? `${user.height} cm` : '', 310, currentY, 235, 80);
+        currentY += 25;
+        drawFormRow('Water Intake', waterMl > 0 ? `${(waterMl/1000).toFixed(1)} L` : '', 50, currentY, 235, 80);
 
         currentY += 40;
         drawSectionHeader('CLINICAL BACKGROUND', currentY);
@@ -312,16 +327,19 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         else if (hr > 100) hrScore = Math.max(0, 60 - (hr - 100) * 3);
         else if (hr < 60) hrScore = Math.max(0, 100 - (60 - hr) * 2);
 
-        const sleepHrs = (user?.sleep_seconds || 28800) / 3600; 
-        let sleepScore = 100;
-        if (sleepHrs >= 7 && sleepHrs <= 9) sleepScore = 100;
-        else sleepScore = Math.max(0, 100 - Math.abs(sleepHrs - 8) * 15);
+        const sleepHrs = sleepSecs > 0 ? (sleepSecs / 3600) : 0;
+        let sleepScore = 0;
+        if (sleepHrs > 0) {
+            if (sleepHrs >= 7 && sleepHrs <= 9) sleepScore = 100;
+            else sleepScore = Math.max(0, 100 - Math.abs(sleepHrs - 8) * 15);
+        }
 
-        const activeCals = user?.calories_burned || 0;
-        const calScore = Math.min(100, (activeCals / 500) * 100);
+        const calScore = activeCals > 0 ? Math.min(100, (activeCals / 500) * 100) : 0;
 
-        const waterLiters = user?.water_intake || 2.0; 
-        const waterScore = Math.min(100, (waterLiters / 2.5) * 100);
+        let waterScore = 0;
+        if (waterMl > 0) {
+            waterScore = Math.min(100, ((waterMl / 1000) / 2.5) * 100);
+        }
 
         const finalScore = Math.round((hrScore * 0.35) + (sleepScore * 0.25) + (calScore * 0.25) + (waterScore * 0.15));
 
@@ -338,6 +356,7 @@ app.get('/api/report/pdf/:uid', async (req, res) => {
         res.status(500).send("PDF Error");
     }
 });
+// 🌟 END OF UPDATE
 
 /* =========================================
    ⌚ PART G: GOOGLE HEALTH SYNC (CONSOLIDATED)
@@ -435,7 +454,7 @@ app.post('/api/send-tracker-email', async (req, res) => {
             // ⚠️ CRITICAL FOR TESTING: In Sandbox mode, this MUST be the email address you used to sign up for Resend!
             to: [email], 
             
-            subject: 'Setup your CatchUp Apple Health Tracker 🍎',
+            subject: 'Setup your CatchUp Apple Health Tracker ',
             html: `
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 12px;">
                     <h2 style="color: #111;">Hi ${firstName || 'there'},</h2>
