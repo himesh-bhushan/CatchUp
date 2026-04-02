@@ -496,32 +496,54 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         const { steps, calories, water_liters, sleep_hours, bp_systolic, bp_diastolic, heart_rate } = req.body; 
         const todayStr = new Date().toISOString().split('T')[0]; 
         const now = new Date().toISOString(); 
+        
         const roundedSteps = Math.round(steps || 0);
         const roundedCalories = Math.round(calories || (roundedSteps * 0.04));
         const distance = parseFloat((roundedSteps * 0.0008).toFixed(2));
         const sleepSeconds = sleep_hours ? Math.round(sleep_hours) : null;
         const bloodPressure = (bp_systolic && bp_diastolic) ? `${Math.round(bp_systolic)}/${Math.round(bp_diastolic)}` : null;
 
+        // 1. Prepare Profile Updates
         const profileUpdates = { last_synced_at: now, steps: roundedSteps, calories_burned: roundedCalories };
-        if (water_liters) profileUpdates.water_intake = water_liters;
         if (sleepSeconds) profileUpdates.sleep_seconds = sleepSeconds;
         if (bloodPressure) profileUpdates.blood_pressure = bloodPressure;
         if (heart_rate) profileUpdates.heart_rate = heart_rate;
 
+        // 🌟 NEW WATER LOGIC: Convert the shortcut's data and route it properly
+        let waterMl = null;
+        if (water_liters) {
+            // NOTE: If your shortcut sends Liters (e.g., 2.5), use (water_liters * 1000). 
+            // If your shortcut already sends Milliliters (e.g., 2500), just use water_liters.
+            waterMl = Math.round(water_liters); 
+            profileUpdates.water_intake = waterMl; // Update profile for today's quick access
+        }
+
+        // 2. Update Profile Table
         await supabase.from('profiles').update(profileUpdates).eq('id', cleanUid);
+
+        // 3. Update Activity Logs Table
         await supabase.from('activity_logs').upsert({
             user_id: cleanUid, date: todayStr, steps: roundedSteps, calories: roundedCalories, distance: distance
         }, { onConflict: 'user_id,date' });
 
+        // 4. Update Sleep Logs Table
         if (sleep_hours) {
             await supabase.from('sleep_logs').upsert({
                 user_id: cleanUid, date: todayStr, hours: parseFloat(sleep_hours) / 3600, seconds: Math.round(sleep_hours) 
             }, { onConflict: 'user_id,date' });
         }
 
+        // 5. Update Blood Pressure Logs Table
         if (bp_systolic && bp_diastolic) {
             await supabase.from('blood_pressure_logs').upsert({
                 user_id: cleanUid, date: todayStr, systolic: Math.round(bp_systolic), diastolic: Math.round(bp_diastolic)
+            }, { onConflict: 'user_id,date' });
+        }
+
+        // 🌟 6. NEW: Save to the new Water Logs Table!
+        if (waterMl !== null) {
+            await supabase.from('water_logs').upsert({
+                user_id: cleanUid, date: todayStr, water_ml: waterMl
             }, { onConflict: 'user_id,date' });
         }
 
@@ -530,8 +552,4 @@ app.post('/api/wearables/manual-sync/:uid', async (req, res) => {
         console.error("Manual Sync Error:", error.message);
         res.status(500).json({ error: error.message });
     }
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 CatchUp Server running on port ${PORT}`);
 });
