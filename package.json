@@ -1,0 +1,9 @@
+{
+  "name": "catchup",
+  "private": true,
+  "workspaces": [
+    "catchup-frontend",
+    "catchup-backend",
+    "catchup-website"
+  ]
+}
