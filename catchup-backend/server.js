@@ -15,6 +15,9 @@ import { Resend } from 'resend'; // 🌟 Put this at the VERY top with your othe
 // --- 1. SETUP ---
 const app = express();
 const PORT = process.env.PORT || 5050; 
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is successfully running on port ${PORT}`);
+});
 
 const allowedOrigins = [
   'http://localhost:3000',           
