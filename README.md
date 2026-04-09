@@ -24,7 +24,7 @@ CatchUp is an open-source, full-stack health tracking application designed to pr
 
 ---
 
-## Repository Structur
+## Repository Structure
 
 This repository is containing the main web application, the backend API server, and the static company landing page.
 
