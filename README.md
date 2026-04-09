@@ -3,7 +3,6 @@
 [![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-43853D?style=flat&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=flat&logo=supabase&logoColor=white)](https://supabase.io/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 CatchUp is an open-source, full-stack health tracking application designed to provide users with a comprehensive and social view of their wellness. It syncs seamlessly with Apple Health via custom iOS Shortcuts to track steps, calories, sleep, and heart rate without needing a native iOS app wrapper. 
 
@@ -25,9 +24,9 @@ CatchUp is an open-source, full-stack health tracking application designed to pr
 
 ---
 
-## Repository Structure (Monorepo)
+## Repository Structur
 
-This repository is a monorepo containing the main web application, the backend API server, and the static company landing page.
+This repository is containing the main web application, the backend API server, and the static company landing page.
 
 ```text
 catchup/
