@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================
+   DESIGN TOKENS (LIGHT)
+========================= */
+:root {
+  --background: 21 36% 87%;
+  --foreground: 0 0% 7%;
+  --border: 20 20% 80%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 7%;
+  --primary: 358 71% 57%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 21 36% 87%;
+  --secondary-foreground: 0 0% 7%;
+  --muted: 0 0% 95%;
+  --muted-foreground: 0 0% 40%;
+  --accent: 21 36% 87%;
+  --accent-foreground: 0 0% 7%;
+  --destructive: 358 71% 57%;
+  --destructive-foreground: 0 0% 100%;
+  --input: 0 0% 88%;
+  --ring: 358 71% 57%;
+
+  --radius: 0.5rem;
+
+  --app-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* =========================
+   DARK MODE
+========================= */
+.dark {
+  --background: 21 20% 12%;
+  --foreground: 0 0% 95%;
+  --border: 0 0% 22%;
+  --card: 0 0% 15%;
+  --card-foreground: 0 0% 95%;
+  --primary: 358 71% 57%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 18%;
+  --secondary-foreground: 0 0% 95%;
+  --muted: 0 0% 18%;
+  --muted-foreground: 0 0% 60%;
+  --accent: 0 0% 20%;
+  --accent-foreground: 0 0% 95%;
+  --destructive: 358 71% 57%;
+  --destructive-foreground: 0 0% 100%;
+  --input: 0 0% 25%;
+  --ring: 358 71% 57%;
+}
+
+/* =========================
+   BASE STYLES
+========================= */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-[hsl(var(--background))] text-[hsl(var(--foreground))];
+  }
+}
+
+/* =========================
+   UTILITIES
+========================= */
+@layer utilities {
+  input[type="search"]::-webkit-search-cancel-button {
+    display: none;
+  }
+
+  [contenteditable][data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+  }
+}
