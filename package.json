@@ -4,6 +4,6 @@
   "workspaces": [
     "catchup-frontend",
     "catchup-backend",
-    "catchup-website"
+    "catchup-company-website"
   ]
 }
