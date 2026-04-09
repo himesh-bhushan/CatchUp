@@ -1,0 +1,426 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+/* --- LAYOUT WRAPPERS --- */
+.signup-page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #fff;
+  font-family: 'Poppins', sans-serif;
+}
+
+.signup-hero-side { display: none; }
+
+.signup-form-side {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center; 
+  width: 100%;
+}
+
+.signup-container {
+  width: 100%;
+  max-width: 500px;
+  padding: 20px 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* --- HEADER & PROGRESS --- */
+.signup-header {
+  display: flex;
+  align-items: center;
+  justify-content: center; 
+  margin-bottom: 20px;
+  padding-top: 20px;
+}
+
+.progress-bar-container {
+  width: 100%; 
+  height: 6px;
+  background-color: #eee;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.signup-progress-fill {
+  height: 100%;
+  background-color: #FF3B30;
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+/* --- INLINE HEADER ROW --- */
+.step-header-row {
+  display: flex;
+  align-items: center;
+  gap: 15px; 
+  margin-bottom: 20px;
+}
+
+.step-header-row h2 {
+  margin: 0; 
+  font-size: 28px;
+  font-weight: 800;
+  color: #FF3B30; 
+}
+
+.step-header-row h2:not(.section-title) {
+  color: #000; 
+}
+
+.back-btn-inline {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #000;
+  transition: background-color 0.2s;
+}
+
+.back-btn-inline:hover {
+  background-color: #f5f5f5;
+}
+
+/* --- FORM TEXT --- */
+.section-title {
+  color: #FF3B30 !important;
+}
+
+.subsection-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #000;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.step-subtitle {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 30px;
+  margin-left: 5px; 
+}
+
+.input-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  margin-top: 15px;
+  color: #000;
+}
+
+.req { color: #FF3B30; }
+
+/* --- INPUTS --- */
+.custom-input {
+  width: 100%;
+  padding: 16px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 16px;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+  background-color: #fff;
+}
+.custom-input:focus { border-color: #FF3B30; }
+
+.text-area {
+  height: 100px;
+  resize: none;
+}
+
+/* --- PRE-EXISTING CONDITIONS CHECKBOXES --- */
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.condition-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background-color: white;
+  transition: all 0.2s ease;
+}
+
+/* When the checkbox is selected, highlight the whole box */
+.condition-checkbox-label.checked {
+  border-color: #FF3B30;
+  background-color: #FFF0F0;
+}
+
+.condition-checkbox-input {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #FF3B30; 
+}
+
+.condition-checkbox-text {
+  font-size: 14px;
+  color: #333;
+  transition: color 0.2s, font-weight 0.2s;
+}
+
+/* Make the text bold and red when checked */
+.condition-checkbox-label.checked .condition-checkbox-text {
+  color: #FF3B30;
+  font-weight: 600;
+}
+
+/* --- TERMS CHECKBOX --- */
+.terms-checkbox-wrapper {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+.checkbox-input {
+  width: 18px;
+  height: 18px;
+  accent-color: #FF3B30;
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+.terms-label {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.terms-label strong { color: #333; }
+
+/* --- BUTTONS --- */
+.btn-next {
+  width: 100%;
+  padding: 18px;
+  background-color: #FF3B30;
+  color: white;
+  border: none;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 20px;
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.2);
+  transition: opacity 0.3s;
+}
+
+.btn-next:disabled {
+  background-color: #ffcccb;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+.finish-btn { background-color: #FF3B30; }
+
+/* --- INFO BOX --- */
+.info-box {
+  background-color: #E3F2FD;
+  border: 1px solid #BBDEFB;
+  border-radius: 12px;
+  padding: 15px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.info-icon {
+  color: #1976D2;
+  min-width: 20px;
+  margin-top: 2px;
+}
+
+.info-box p {
+  margin: 0;
+  font-size: 12px;
+  color: #0D47A1;
+  line-height: 1.4;
+}
+
+/* --- ANIMATION --- */
+.animate-fade-in { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================
+   🖥️ DESKTOP SPLIT SCREEN
+   ========================================= */
+@media (min-width: 1024px) {
+  .signup-page-wrapper {
+    flex-direction: row;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .signup-hero-side {
+    display: flex;
+    flex-direction: column; 
+    flex: 4; 
+    background-color: #FFF9C4;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  .hero-content-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    gap: 30px !important; 
+    width: 100% !important;
+  }
+
+  .signup-hero-side h1 {
+    font-size: 2.8rem; 
+    font-weight: 800;
+    color: #FF3B30;
+    line-height: 1.1;
+    margin: 0; 
+  }
+
+  .signup-hero-image {
+    width: 100% !important;      
+    max-width: 300px !important; 
+    height: auto !important;
+    object-fit: contain !important;
+    display: block !important; 
+    margin: 0 auto !important; 
+    position: static !important; 
+    transform: scale(1.3) !important; 
+  }
+
+  .signup-form-side {
+    flex: 6; 
+    overflow-y: auto;
+    display: flex;
+    align-items: center; 
+    justify-content: center;
+    padding: 40px;
+  }
+
+  .signup-container {
+    max-width: 450px;
+    margin: 0 auto;
+    padding: 0; 
+  }
+}
+
+/* =========================================
+   📱 MOBILE SIGN-UP RESPONSIVENESS (MASTER)
+   ========================================= */
+@media (max-width: 768px) {
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100% !important;
+        overflow-y: auto !important; 
+        overflow-x: hidden !important;
+    }
+    .signup-page-wrapper {
+        min-height: 100dvh !important; 
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    .signup-form-side {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+    .signup-container {
+        width: 100% !important;
+        padding: 20px 25px 30px 25px !important; 
+        box-sizing: border-box !important;
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    .signup-header {
+        margin-bottom: 25px !important;
+        padding-top: 10px !important;
+    }
+    .step-header-row {
+        margin-bottom: 15px !important;
+        gap: 12px !important;
+    }
+    .step-header-row h2 {
+        font-size: 28px !important; 
+        line-height: 1.1 !important;
+    }
+    .step-subtitle {
+        font-size: 15px !important;
+        margin-bottom: 25px !important;
+        margin-left: 0 !important;
+        color: #555 !important;
+    }
+    .custom-input, 
+    .text-area {
+        font-size: 16px !important; 
+        padding: 18px 20px !important;
+        border-radius: 16px !important;
+        margin-bottom: 15px !important;
+    }
+    .input-label {
+        font-size: 14px !important;
+        margin-bottom: 10px !important;
+    }
+    .checkbox-grid {
+        gap: 12px !important;
+        margin-bottom: 25px !important;
+    }
+    .condition-checkbox-text {
+        font-size: 14px !important;
+    }
+    .terms-checkbox-wrapper {
+        margin-top: 10px !important;
+        margin-bottom: 25px !important;
+    }
+    .terms-label {
+        font-size: 12px !important;
+        line-height: 1.4 !important;
+    }
+    .btn-next {
+        margin-top: auto !important; 
+        width: 100% !important;
+        height: 60px !important; 
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 1.15rem !important;
+        padding: 0 !important;
+        border-radius: 999px !important;
+    }
+    .info-box {
+        margin-top: 15px !important;
+        margin-bottom: 25px !important;
+        border-radius: 16px !important;
+    }
+}

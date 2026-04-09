@@ -1,0 +1,220 @@
+/* =========================================
+   AWARDS PAGE (MATCHING FIGMA LAYOUT)
+   ========================================= */
+
+.dashboard-wrapper.awards-page-bg {
+    background-color: var(--bg-color) !important; /* Swapped from #F8DBCA */
+    min-height: 100vh;
+}
+
+.awards-page-container {
+    width: 100%;
+    max-width: 1200px; 
+    margin: 0 auto;
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-primary); /* Swapped from #111 */
+    padding: 30px 40px; 
+}
+
+/* --- Header --- */
+.awards-header-top {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px; 
+}
+
+.awards-header-top h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 500;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary); /* Swapped from #111 */
+    padding: 8px;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+/* Ensure the hover state is slightly visible in dark mode */
+.icon-btn:hover { background: var(--border-color); } 
+
+/* --- Main Achievements Card --- */
+.achievements-card {
+    background-color: var(--card-bg);  /* Swapped from #FBF7EC */
+    border-radius: 20px; 
+    padding: 40px 50px; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+    width: 100%;
+    border: 1px solid var(--border-color); /* Added border to separate from bg in dark mode */
+}
+
+.ac-card-body {
+    display: flex;
+    align-items: flex-start; 
+    justify-content: space-between;
+    width: 100%;
+}
+
+/* Left Column */
+.ac-left-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+}
+
+.ac-card-title {
+    align-self: flex-start; 
+    font-size: 2rem;
+    font-weight: 500;
+    margin: 0 0 30px 0; 
+    color: var(--text-primary); /* Ensures it follows theme */
+}
+
+.ac-main-badge-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ac-main-badge {
+    width: 300px; 
+    object-fit: contain;
+    filter: drop-shadow(0 15px 20px rgba(0,0,0,0.15)); 
+}
+
+.ac-challenge-title {
+    font-size: 1.4rem; 
+    font-weight: 500;
+    margin: 25px 0 15px 0;
+    color: var(--text-primary); /* Ensures it follows theme */
+}
+
+.ac-progress-bar {
+    width: 100%;
+    max-width: 240px; 
+    height: 14px; 
+    background-color: var(--border-color); /* Swapped from #BDC3C7 */
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.ac-progress-fill {
+    height: 100%;
+    background-color: #4CAF50; /* Kept brand green for progress */
+    border-radius: 10px;
+}
+
+/* Right Column (Grid) */
+.ac-right-col {
+    flex: 1.2; 
+    display: flex;
+    flex-direction: column;
+}
+
+.ac-grid {
+    display: grid;
+    grid-template-columns: repeat(4, max-content); 
+    justify-content: center; 
+    width: 100%;
+}
+
+.ac-grid-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ac-grid-item img {
+    width: 135px; 
+    height: 135px;
+    object-fit: contain;
+    transition: all 0.3s ease;
+}
+
+.badge-earned {
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.15));
+}
+
+.badge-unearned {
+    filter: drop-shadow(0 0 0 transparent);
+}
+
+.ac-grid-item span {
+    font-size: 0.95rem; 
+    font-weight: 400;
+    color: var(--text-secondary); /* Swapped from #333 */
+}
+
+/* --- Restored Bottom Section --- */
+.other-awards-section {
+    margin-top: 50px;
+    display: flex;
+    gap: 40px;
+    opacity: 0.9;
+}
+
+.other-badge-wrapper {
+    display: flex;
+}
+
+.other-badge {
+    width: 240px; 
+    object-fit: contain;
+    clip-path: inset(0 0 35% 0); 
+}
+
+/* --- NEW: Milestone Awards Row --- */
+.milestone-awards-container {
+    display: flex;
+    flex-direction: row; 
+    justify-content: space-between; 
+    align-items: flex-start; 
+    width: 100%;
+    margin-top: 20px;
+}
+
+.milestone-item {
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    gap: 20px; 
+    width: 320px; 
+    text-align: center;
+}
+
+.milestone-item img {
+    width: 250px; 
+    height: 250px;
+    object-fit: contain;
+    transition: all 0.3s ease;
+}
+
+.milestone-item span {
+    font-size: 1.3rem; 
+    font-weight: 500;
+    color: var(--text-primary); /* Swapped from #111 */
+    line-height: 1.4;
+}
+
+/* --- Responsive Adjustments --- */
+@media screen and (max-width: 1100px) {
+    .ac-card-body {
+        flex-direction: column;
+        gap: 50px;
+    }
+    .ac-right-col {
+        padding-top: 0;
+    }
+    .ac-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

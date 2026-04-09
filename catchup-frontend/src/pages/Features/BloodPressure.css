@@ -1,0 +1,174 @@
+/* Overrides dashboard background specifically for the Blood Pressure page */
+.dashboard-wrapper.bp-page-wrapper-bg,
+.bp-page-wrapper-bg .dashboard-content {
+    background: var(--bg-color) !important; 
+    background-color: var(--bg-color) !important;
+    min-height: 100vh;
+}
+.bp-page-container {
+  width: 100%; 
+  max-width: 1200px; 
+  min-height: 100vh; 
+  background-color: var(--bg-color);
+  font-family: 'Poppins', sans-serif;
+  margin: 0 auto;
+  padding: 30px 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- FIXED HEADER --- */
+.bp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; 
+  margin-bottom: 20px;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.bp-back-btn {
+  background: none; 
+  border: none; 
+  font-size: 24px; 
+  cursor: pointer;
+  color: var(--text-primary);
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  padding: 0;
+  width: 40px;
+}
+
+.range-pills {
+  background-color: var(--card-bg); 
+  border: 1px solid var(--border-color);
+  padding: 5px;
+  border-radius: 30px;
+  display: flex;
+  gap: 5px;
+  flex: 1; 
+  justify-content: center; 
+  max-width: 600px; 
+  margin: 0 auto; 
+}
+
+.pill {
+  border: none; background: transparent;
+  padding: 8px 15px;
+  border-radius: 25px;
+  font-size: 13px; font-weight: 600; color: var(--text-secondary);
+  cursor: pointer; transition: 0.2s ease;
+  flex: 1;
+  white-space: nowrap;
+}
+
+.pill.active {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  border: 1px solid var(--border-color); 
+}
+
+.calendar-btn {
+  width: 40px; height: 40px; 
+  border-radius: 50%; 
+  border: 1px solid var(--border-color); 
+  background: var(--card-bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; cursor: pointer; color: var(--text-primary);
+}
+
+/* --- Stats Header (AVERAGE TEXT FIXED HERE) --- */
+.stats-block { margin-bottom: 15px; flex-shrink: 0; }
+.stats-block h2 { font-size: 28px; font-weight: 500; color: var(--text-primary); margin: 0; }
+.highlight-red { color: #D32F2F; font-weight: 700; }
+.date-range-sub { color: var(--text-secondary); font-size: 14px; margin-top: 5px; }
+
+/* --- Chart Area (FIXED TO var(--card-bg) for Dark Mode) --- */
+.chart-container {
+  background: var(--card-bg); 
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  margin-bottom: 20px; 
+  flex: 1; 
+  min-height: 0; 
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bp-chart-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.no-data-container {
+  height: 100%;
+  width: 100%;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 18px;
+}
+
+/* --- Bottom: Today --- */
+.today-reading-block {
+  margin-top: 10px;
+  flex-shrink: 0;
+  padding-bottom: 10px;
+}
+
+.today-header {
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+/* Latest Entry Text Fixed */
+.today-reading-block h3 {
+  font-size: 24px; font-weight: 600; margin: 0; color: var(--text-primary);
+}
+
+.today-reading-block h1 {
+  font-size: 36px; margin: 10px 0 5px 0;
+  display: flex; align-items: center; gap: 10px;
+  color: var(--text-primary);
+}
+
+.unit { font-size: 20px; color: #D32F2F; font-weight: 700; }
+.date-sub { color: var(--text-secondary); font-size: 14px; }
+
+/* --- Add Form --- */
+.add-reading-btn {
+  border: 1px solid var(--border-color); background: var(--card-bg); width: 35px; height: 35px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  font-size: 18px; color: var(--text-primary);
+}
+
+.add-form {
+  display: flex; align-items: center; gap: 10px; margin-top: 10px;
+}
+.add-form input {
+  width: 80px; padding: 10px; border: 1px solid var(--border-color); border-radius: 12px; 
+  background: var(--card-bg); color: var(--text-primary);
+  font-size: 18px; text-align: center; font-weight: 700;
+}
+.add-form .divider { font-size: 24px; color: var(--text-secondary); }
+.add-form button {
+  padding: 10px 20px; background: #FF3B30; color: white; 
+  border: none; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 14px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 1024px) {
+  .bp-page-container { padding: 20px; max-width: 100%; height: auto; overflow: auto; }
+}
+
+@media (max-width: 768px) {
+  .bp-page-container { padding: 15px; }
+  .bp-header { flex-wrap: wrap; }
+  .range-pills { min-width: 100%; margin-top: 10px; order: 3; }
+  .calendar-btn { margin-left: auto; }
+}

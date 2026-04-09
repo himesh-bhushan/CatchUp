@@ -1,0 +1,186 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap');
+
+/* Main Container */
+.welcome-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 30px;
+  background-color: #ffffff;
+  font-family: 'Poppins', sans-serif;
+  box-sizing: border-box;
+}
+
+/* 🌟 UPDATED CLASS NAME TO MATCH JS */
+.welcome-hero-section {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end; 
+  overflow: hidden;      
+  margin-bottom: 10px;   
+}
+
+/* 🌟 UPDATED CLASS NAME TO MATCH JS */
+.welcome-hero-image {
+  width: 130%;           
+  max-width: 500px;      
+  height: auto;
+  object-fit: contain;
+  margin-bottom: -50px; 
+  margin-top: 0;
+}
+
+.image-placeholder {
+  width: 220px;
+  height: 220px;
+  background-color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+}
+
+/* Text Section */
+.text-section {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+h1 {
+  color: #FF3B30; 
+  font-size: 40px; 
+  font-weight: 800;
+  line-height: 1.2;
+  margin-top: 20px;
+  margin-left: 20px;
+  margin-bottom: 5px;
+}
+
+/* Button Group */
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; 
+  margin-bottom: 20px;
+}
+
+/* Base Button Style */
+.btn {
+  width: 100%;
+  padding: 20px 0; 
+  font-size: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 999px; 
+  transition: transform 0.1s;
+}
+
+.btn-signup {
+  background-color: #ffffff;
+  color: #000000;
+  border: 2px solid #000000; 
+}
+
+.btn-signin {
+  background-color: #FF3B30; 
+  color: #ffffff;
+  border: 2px solid #FF3B30; 
+  margin-top: 5px;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+/* =========================================
+   📱 MOBILE VIEW 
+   ========================================= */
+@media (max-width: 768px) {
+    
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100% !important;
+        overflow: hidden !important; 
+    }
+
+    .welcome-container {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important; 
+        height: 100dvh !important; 
+        padding: 40px 25px 40px 25px !important; 
+        box-sizing: border-box !important;
+        background-color: #ffffff !important;
+    }
+
+    /* 🌟 FULLY ISOLATED HERO SECTION */
+    .welcome-hero-section {
+        position: relative !important; 
+        flex: 1 !important; 
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        margin: 0 0 20px 0 !important;
+        width: 100% !important;
+        overflow: visible !important;
+    }
+
+    /* 🌟 FULLY ISOLATED HERO IMAGE */
+    .welcome-hero-image {
+        position: relative !important; 
+        right: auto !important;        
+        bottom: auto !important;       
+        width: 100% !important; 
+        max-width: 320px !important; 
+        height: auto !important;
+        object-fit: contain !important;
+        transform: none !important;    
+    }
+
+    .text-section {
+        width: 100% !important;
+        text-align: center !important; 
+        margin: 0 0 40px 0 !important;
+    }
+
+    h1 {
+        font-size: 36px !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
+        text-align: center !important; 
+        line-height: 1.15 !important;
+    }
+
+    .button-group {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 15px !important;
+        margin: 0 !important;
+    }
+
+    .btn {
+        width: 100% !important;
+        height: 60px !important; 
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 1.25rem !important;
+        border-radius: 999px !important; 
+    }
+
+    .btn-signup {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border: 2px solid #000000 !important;
+    }
+
+    .btn-signin {
+        background-color: #FF3B30 !important;
+        color: #ffffff !important;
+        border: 2px solid #FF3B30 !important;
+        margin-top: 0 !important; 
+    }
+}

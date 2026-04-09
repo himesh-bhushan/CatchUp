@@ -1,0 +1,423 @@
+/* --- GLOBAL LAYOUT --- */
+.activity-page-wrapper {
+    min-height: 100vh;
+    padding: 40px 80px; 
+    background: var(--bg-color); /* Swapped from #fff */
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-primary); /* Swapped from #333 */
+    box-sizing: border-box;
+}
+
+/* Overrides dashboard background specifically for the Activity page */
+.dashboard-wrapper.activity-page-bg,
+.activity-page-bg .dashboard-content {
+    background: var(--bg-color) !important; /* Swapped from #FFFFFF */
+    background-color: var(--bg-color) !important; /* Swapped from #FFFFFF */
+    min-height: 100vh;
+}
+
+/* Ensure your main container scales nicely next to the sidebar */
+.activity-page-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 40px; 
+}
+
+/* --- HEADER --- */
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 50px;
+}
+
+/* Group Title + Back Button + Calendar together */
+.header-left { 
+    display: flex; 
+    align-items: center; 
+    gap: 15px; 
+}
+
+.header-left h2 { font-size: 1.8rem; font-weight: 600; margin: 0; color: var(--text-primary); } /* Swapped from #000 */
+
+.back-btn-icon {
+    background: none; border: none; cursor: pointer; padding: 0;
+    display: flex; align-items: center; color: var(--text-primary); transition: transform 0.2s; /* Swapped from #000 */
+}
+.back-btn-icon:hover { transform: translateX(-3px); }
+
+/* Updated Calendar Button Style */
+.calendar-wrapper {
+    background: var(--card-bg); width: 40px; height: 40px; /* Swapped from #fff */
+    border-radius: 50%; border: 1px solid var(--border-color); /* Swapped from #ddd */
+    display: flex; justify-content: center; align-items: center;
+    cursor: pointer; position: relative;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    margin-left: 5px; 
+}
+
+/* Add an icon rule to handle dark mode calendar icon */
+.calendar-wrapper svg {
+    color: var(--text-primary) !important; /* Forces icon to match text theme */
+}
+
+.calendar-wrapper:hover { transform: scale(1.05); border-color: var(--text-secondary); } /* Swapped from #bbb */
+.hidden-date-input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+
+
+/* --- MAIN GRID --- */
+.activity-grid {
+    display: grid;
+    grid-template-columns: 100px 1fr 1.4fr; 
+    gap: 50px;
+    max-width: 1200px;
+    margin: 0 auto;
+    align-items: center;
+}
+
+
+/* --- LEFT SIDEBAR (WEEK VIEW) --- */
+.week-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; 
+    margin-top: 0; 
+}
+
+.day-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; 
+    gap: 15px; 
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.day-letter-box {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; color: #E63946; font-size: 0.8rem;
+    border-radius: 50%;
+}
+.day-row.selected .day-letter-box { background-color: #F8E7D6; color: #D93025; }
+
+.mini-ring-wrapper {
+    width: 48px; 
+    height: 48px;
+    opacity: 0.5; 
+    transition: opacity 0.2s, transform 0.2s;
+}
+.day-row.selected .mini-ring-wrapper { opacity: 1; transform: scale(1.1); }
+
+/* 🌟 DESKTOP FIX: Pushes the 9 o'clock start to exactly 12 o'clock */
+.mini-circular-chart { 
+    display: block !important; 
+    max-width: 100% !important; 
+    overflow: visible !important; 
+    transform: rotate(0deg) !important; 
+    transform-origin: 50% 50% !important;
+}
+
+/* Branding colors kept intact */
+.mini-circle-bg { fill: #F8E7D6; stroke: none; } 
+.mini-circle { fill: none; stroke: #E63946; stroke-width: 6; stroke-linecap: round; } 
+
+
+/* --- CENTER RING --- */
+.main-ring-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 0;
+}
+
+.large-ring-container {
+    width: 320px; height: 320px;
+    position: relative;
+    margin-bottom: 40px;
+}
+
+/* 🌟 DESKTOP FIX: Pushes the 9 o'clock start to exactly 12 o'clock */
+.large-circular-chart { 
+    display: block !important;
+    transform: rotate(0deg) !important; 
+    transform-origin: 50% 50% !important;
+    overflow: visible !important; 
+}
+
+/* The Solid Beige Center - Branding colors kept intact */
+.circle-bg { fill: #F8E7D6; stroke: none; }
+
+/* The Red Progress Ring - Branding colors kept intact */
+.circle { 
+    fill: none; 
+    stroke: #D93025; 
+    stroke-width: 4; 
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.5s ease;
+}
+
+/* 🌟 ARROW FIX: Premium Red Cap applied globally */
+.ring-arrow-overlay {
+    position: absolute;
+    top: 18px;              
+    left: 50%;              
+    transform: translate(-50%, -50%); 
+    width: 34px; 
+    height: 34px;
+    background-color: #D93025; 
+    border-radius: 50%;
+    border: none;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    z-index: 10;
+    pointer-events: none;
+    color: white; /* Arrow icon color stays white for contrast on red */
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+
+.ring-arrow-overlay svg, 
+.ring-arrow-overlay i {
+    font-size: 16px;
+    transform: rotate(0deg); 
+}
+
+.change-goal-btn {
+    background: #E6685B; color: white; border: none;
+    padding: 12px 40px; border-radius: 12px;
+    font-size: 1rem; font-weight: 500; cursor: pointer;
+    box-shadow: 0 4px 10px rgba(230, 104, 91, 0.2);
+    transition: transform 0.2s;
+}
+.change-goal-btn:hover { transform: translateY(-2px); }
+
+
+/* --- RIGHT COLUMN: STATS --- */
+.stats-graphs-section { padding-left: 0; }
+.stat-block { margin-bottom: 50px; }
+.stat-block h3 { margin: 0 0 5px 0; font-size: 1.2rem; font-weight: 400; color: var(--text-primary); } /* Swapped from #333 */
+.stat-highlight { display: flex; align-items: baseline; gap: 8px; margin-bottom: 25px; }
+
+.big-num { font-size: 2rem; font-weight: 700; line-height: 1; }
+.red-text { color: #E63946; } /* Kept branding red */
+.black-text { color: var(--text-primary); } /* Swapped from #000 */
+.sub-text { font-size: 1rem; color: #E63946; font-weight: 600; text-transform: uppercase; }
+
+.dual-stat-header { display: flex; justify-content: space-between; margin-bottom: 25px; }
+
+/* Charts */
+.chart-outer-wrapper { position: relative; height: 90px; margin-bottom: 10px; width: 100%; }
+.grid-lines {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; flex-direction: column; justify-content: space-between; z-index: 0;
+}
+.grid-line { width: 100%; height: 1px; background: var(--border-color); } /* Swapped from #EAEAEA */
+
+.bar-chart-container {
+    position: relative; z-index: 1; display: flex; align-items: flex-end;
+    justify-content: space-between; height: 100%; width: 100%; padding: 0 10px;
+}
+.bar-wrapper { width: 8%; height: 100%; display: flex; align-items: flex-end; }
+.bar-fill { width: 100%; background: #F25C54; border-radius: 2px 2px 0 0; transition: height 0.4s ease; } /* Branding color kept */
+
+.chart-labels {
+    display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-secondary); margin-top: 8px; /* Swapped from #aaa */
+}
+.total-burn {
+    margin-top: 15px; font-size: 0.75rem; color: #F25C54; font-weight: 600; text-transform: uppercase;
+}
+
+
+/* --- MODAL (POPUP) STYLES --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.7); /* Darkened slightly for better contrast in dark mode */
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+    background: var(--card-bg); /* Swapped from white */
+    padding: 30px;
+    border-radius: 20px;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4); /* Darkened shadow for dark mode */
+    transform: scale(0.9);
+    animation: popIn 0.2s ease-out forwards;
+}
+
+.modal-content h3 { margin: 0 0 15px 0; color: var(--text-primary); } /* Swapped from #333 */
+
+.modal-input {
+    width: 100%;
+    padding: 10px;
+    font-size: 1.2rem;
+    border: 2px solid var(--border-color); /* Swapped from #eee */
+    background: var(--bg-color); /* Added to support dark mode input */
+    border-radius: 10px;
+    text-align: center;
+    margin-bottom: 20px;
+    outline: none;
+    font-weight: bold;
+    color: #E63946;
+}
+.modal-input:focus { border-color: #E63946; }
+
+.modal-actions { display: flex; gap: 10px; justify-content: center; }
+
+.btn-save {
+    background: #E63946; color: white; border: none;
+    padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600;
+}
+.btn-cancel {
+    background: var(--border-color); color: var(--text-primary); border: none; /* Swapped from #eee and #333 */
+    padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+
+/* =========================================
+   📱 MOBILE ACTIVITY PAGE RESPONSIVENESS
+   ========================================= */
+
+@media (max-width: 768px) {
+    
+    .activity-page-wrapper, 
+    .dashboard-wrapper.activity-page-bg {
+        padding: 20px 20px 130px 20px !important; 
+        min-height: 100dvh !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        display: block !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    .activity-page-container {
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    .activity-header {
+        margin-bottom: 30px !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+
+    .header-left { gap: 15px !important; flex: 1 !important; }
+    .header-left h2 { font-size: 1.3rem !important; white-space: nowrap !important; }
+    
+    .calendar-wrapper {
+        width: 40px !important; height: 40px !important; flex-shrink: 0 !important;
+    }
+
+    .activity-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 25px !important;
+        width: 100% !important;
+    }
+
+    .week-sidebar {
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        gap: 5px !important;
+        margin-bottom: 10px !important;
+    }
+
+    .day-row {
+        flex-direction: column !important; 
+        gap: 8px !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+
+    .day-letter-box {
+        font-size: 0.9rem !important;
+        width: 28px !important; height: 28px !important;
+        background: transparent !important; 
+        margin-bottom: 5px !important;
+    }
+
+    .day-row.selected .day-letter-box {
+        background-color: var(--border-color) !important; color: #E63946 !important; /* Swapped from #F0F0F0 */
+    }
+
+    .mini-ring-wrapper {
+        width: 36px !important; height: 36px !important;
+        position: relative !important;
+    }
+
+    svg.large-circular-chart, 
+    svg.mini-circular-chart,
+    .large-circular-chart, 
+    .mini-circular-chart {
+        display: block !important;
+        transform: rotate(0deg) !important; 
+        transform-origin: 50% 50% !important; 
+        overflow: visible !important;
+    }
+
+    .main-ring-section {
+        width: 100% !important; padding: 0 !important;
+        margin-top: 10px !important; margin-bottom: 40px !important;
+        display: flex !important; flex-direction: column !important; align-items: center !important;
+    }
+
+    .large-ring-container {
+        width: 260px !important; height: 260px !important;
+        margin: 0 auto 35px auto !important;
+        position: relative !important;
+        display: flex !important; justify-content: center !important; align-items: center !important;
+    }
+
+    .ring-arrow-overlay {
+        position: absolute !important;
+        top: 18px !important; left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        margin: 0 !important;
+        z-index: 10 !important;
+    }
+
+    .stats-graphs-section { width: 100% !important; }
+    .stat-block { margin-bottom: 30px !important; width: 100% !important; }
+
+    .stat-block h3 {
+        font-size: 1.6rem !important; color: var(--text-primary) !important; /* Swapped from #111 */
+        margin-bottom: 5px !important; text-align: left !important; margin-left: 5px !important;
+    }
+
+    .stat-highlight {
+        margin-bottom: 20px !important; gap: 8px !important; justify-content: flex-start !important; 
+    }
+
+    .big-num { font-size: 2.2rem !important; line-height: 1 !important; }
+    .sub-text { font-size: 1.3rem !important; }
+
+    .dual-stat-header {
+        display: flex !important; flex-direction: row !important; 
+        justify-content: space-between !important; width: 100% !important;
+        margin-top: 15px !important; margin-bottom: 0 !important; gap: 20px !important;
+    }
+
+    .dual-stat-header > div {
+        flex: 1 !important; display: flex !important; flex-direction: column !important; align-items: flex-start !important; 
+    }
+
+    .dual-stat-header h3 { font-size: 1.4rem !important; margin-bottom: 5px !important; color: var(--text-primary) !important; font-weight: 400 !important; } /* Swapped from #111 */
+    .dual-stat-header .big-num { font-size: 1.6rem !important; color: var(--text-primary) !important; } /* Swapped from #000 */
+    .dual-stat-header .sub-text { font-size: 1rem !important; color: var(--text-primary) !important; } /* Swapped from #000 */
+
+    .chart-outer-wrapper { height: 80px !important; width: 100% !important; }
+}
