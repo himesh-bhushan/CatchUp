@@ -37,9 +37,3 @@ Follow these instructions to set up the CatchUp backend on your local machine.
 * A [Supabase](https://supabase.com/) project (URL and Anon Key)
 * A [Groq](https://groq.com/) API Key
 * A [Resend](https://resend.com/) API Key
-
-### 1. Clone the repository
-
-```bash
-git clone [https://github.com/yourusername/catchup.git](https://github.com/yourusername/catchup.git)
-cd catchup/backend
